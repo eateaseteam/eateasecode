@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for SystemChrome
 import 'package:timezone/data/latest.dart' as tz;
 import 'Notification_Handler/notification_handler.dart';
-import 'admin_web/booking_display_screen.dart';
+import 'admin_page/welcome_screen/welcome_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -66,10 +66,10 @@ class MyApp extends StatelessWidget {
       title: 'EatEase',
       debugShowCheckedModeBanner: false,
       home: kIsWeb
-          ? BookingDisplayScreen() // Use web-specific screen
+          ? WelcomeScreen() // Use web-specific screen
           : (Platform.isAndroid
           ? Splash() // Android-specific screen
-          : BookingDisplayScreen()), // Default fallback
+          : WelcomeScreen()), // Default fallback
     );
   }
 }
