@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../add_new_admin_screen/add_new_admin_screen.dart';
 import '../admin_dashboard_screen/admin_dashboard_screen.dart';
+import '../customer_list_data/customer_list_data.dart';
+import '../list_or_add_restaurant_data/list_or_add_restaurant_data.dart';
 
 class AdminHomeScreenPage extends StatefulWidget {
   @override
@@ -73,8 +75,6 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                   _buildListTile('Admin', Icons.person, Colors.blue[600]!),
                   _buildListTile('Customer', Icons.person_outline, Colors.blue[600]!),
                   _buildListTile('Restaurant', Icons.restaurant, Colors.blue[600]!),
-                  _buildListTile('Reservation', Icons.calendar_today, Colors.blue[600]!),
-                  _buildListTile('History', Icons.history, Colors.blue[600]!),
                 ],
               ),
             ),
@@ -83,6 +83,10 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                 ? AdminDashboardScreen()
                 : _currentPage == 'Admin'
                 ? AdminPanel()
+                : _currentPage == 'Customer'
+                ? CustomerListPage()
+                : _currentPage == 'Restaurant'
+                ? ListOrAddRestaurantData()
                 : Center(child: Text('Content for $_currentPage')),
           ),
         ],
