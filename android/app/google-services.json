@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "923569375017",
-    "project_id": "eateaseappwebdb",
-    "storage_bucket": "eateaseappwebdb.firebasestorage.app"
+    "project_number": "804961042835",
+    "project_id": "agosbuhay-db",
+    "storage_bucket": "agosbuhay-db.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:923569375017:android:b9f4625207cf5636749938",
+        "mobilesdk_app_id": "1:804961042835:android:d74c3b4038bae03200a866",
         "android_client_info": {
           "package_name": "com.example.eatease_app_web"
         }
@@ -15,7 +15,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCMjgF2tvxdnDFZH94EnWLpJvThtl4Oxnw"
+          "current_key": "AIzaSyB8lUN3nYcdebl3zg5z1ZPPEZHLTidAZtc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804961042835:android:f3084e7b2e33e64100a866",
+        "android_client_info": {
+          "package_name": "com.example.flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8lUN3nYcdebl3zg5z1ZPPEZHLTidAZtc"
         }
       ],
       "services": {

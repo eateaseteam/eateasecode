@@ -51,6 +51,9 @@ dependencies:
   flutter_animate: ^4.5.0
   fl_chart: ^0.69.2
   shimmer: ^3.0.0
+  firebase_storage: ^12.2.0
+  universal_html: ^2.2.4
+  image_picker_web: ^4.0.0
 
 dev_dependencies:
   flutter_test:

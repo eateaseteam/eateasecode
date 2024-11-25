@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../admin_home_screen_page/admin_home_screen_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
 
-class AdminRestaurantLoginScreen extends StatefulWidget {
+class RestaurantAdminLoginPage extends StatefulWidget {
   @override
-  _AdminRestaurantLoginScreenState createState() => _AdminRestaurantLoginScreenState();
+  _RestaurantAdminLoginPageState createState() => _RestaurantAdminLoginPageState();
 }
 
-class _AdminRestaurantLoginScreenState extends State<AdminRestaurantLoginScreen> {
+class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isObscurePassword = true;
-  bool _isAdmin = false;
+  String? _adminEmail; // To hold the admin email
 
   @override
   void dispose() {
@@ -21,25 +23,54 @@ class _AdminRestaurantLoginScreenState extends State<AdminRestaurantLoginScreen>
     super.dispose();
   }
 
-  void _login() {
-    // Implement your login logic here, checking email and password.
-    // Once authenticated, navigate to the appropriate dashboard.
+  void _login() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
 
-    // Assuming the login is successful, check the _isAdmin flag
-    if (_isAdmin) {
-      // Navigate to the AdminDashboardPage
-      Navigator.pushReplacement(
-        context,
-       MaterialPageRoute(builder: (context) => AdminHomeScreenPage()),
-      );
-    } else {
-      // Navigate to the DashboardPage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => RestaurantAdminDashboardPage()),
+    try {
+      // Authenticate the user with Firebase Auth
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // Fetch the restaurant details using the user's UID (now the document ID)
+      DocumentSnapshot restaurantDoc = await FirebaseFirestore.instance
+          .collection('restaurants')
+          .doc(userCredential.user!.uid)  // Use the UID as the document ID
+          .get();
+
+      if (restaurantDoc.exists) {
+        // Restaurant found, navigate to the Restaurant Admin Dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RestaurantAdminDashboardPage(
+              userId: userCredential.user!.uid, // Pass UID as userId
+            ),
+          ),
+        );
+      } else {
+        // No restaurant found for this user (UID mismatch or no restaurant)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No restaurant found for this user. Please check your credentials.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle login errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login failed: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,7 +90,7 @@ class _AdminRestaurantLoginScreenState extends State<AdminRestaurantLoginScreen>
               ),
               const SizedBox(height: 12.0),
               Text(
-                'Log in to effortlessly manage your restaurant\'s bookings and services.',
+                'Log in to manage your restaurant\'s operations.',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -134,33 +165,6 @@ class _AdminRestaurantLoginScreenState extends State<AdminRestaurantLoginScreen>
                   contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
                 ),
               ),
-              const SizedBox(height: 16.0),
-              Row(
-                children: [
-                  Transform.scale(
-                    scale: 1.1,
-                    child: Checkbox(
-                      value: _isAdmin,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          _isAdmin = value ?? false;
-                        });
-                      },
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      activeColor: Colors.blue[600],
-                    ),
-                  ),
-                  Text(
-                    'Login as admin',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 32.0),
               ElevatedButton(
                 onPressed: _login,
@@ -181,6 +185,17 @@ class _AdminRestaurantLoginScreenState extends State<AdminRestaurantLoginScreen>
                   ),
                 ),
               ),
+              const SizedBox(height: 16.0),
+              if (_adminEmail != null)
+                Text(
+                  'Logged in as: $_adminEmail', // Display the admin email after login
+                  style: GoogleFonts.inter(
+                    color: Colors.green,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
             ],
           ),
         ),

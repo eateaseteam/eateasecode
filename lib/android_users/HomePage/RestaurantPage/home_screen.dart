@@ -1,8 +1,8 @@
-import 'package:eatease_app_web/android_users/HomePage/RestaurantPage/restaurant_data_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'restaurant_details_screen.dart';
+import 'restaurant_data_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => RestaurantDetailsScreen(
-                        restaurant: food['restaurantData'],
+                        restaurantId: food['restaurantId'],
                       ),
                     ),
                   );
@@ -197,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ClipRRect(
                           borderRadius:
                           BorderRadius.vertical(top: Radius.circular(12)),
-                          child: Image.asset(
+                          child: Image.network(
                             food['image'],
                             height: 100,
                             width: double.infinity,
@@ -264,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return Center(child: Text('No restaurants found.'));
         }
 
-        final restaurants = snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        final restaurants = snapshot.data!.docs;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,14 +286,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 itemCount: restaurants.length,
                 itemBuilder: (context, index) {
-                  final restaurant = restaurants[index];
+                  final restaurant = restaurants[index].data() as Map<String, dynamic>;
+                  final restaurantId = restaurants[index].id;
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => RestaurantDetailsScreen(
-                            restaurant: restaurant,
+                            restaurantId: restaurantId,
                           ),
                         ),
                       );
@@ -312,8 +313,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ClipRRect(
                               borderRadius:
                               BorderRadius.vertical(top: Radius.circular(12)),
-                              child: Image.asset(
-                                restaurant['image'],
+                              child: Image.network(
+                                restaurant['logoUrl'],
                                 height: 100,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
@@ -334,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    restaurant['description'],
+                                    restaurant['address'] ?? '',
                                     style: GoogleFonts.poppins(
                                       color: Colors.grey[600],
                                       fontSize: 12,

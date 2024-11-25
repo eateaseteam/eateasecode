@@ -47,30 +47,31 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAmapUnWCOxpcr_eAsRBhWVFZBm_jQdhTo',
-    appId: '1:923569375017:web:910c07375db7771a749938',
-    messagingSenderId: '923569375017',
-    projectId: 'eateaseappwebdb',
-    authDomain: 'eateaseappwebdb.firebaseapp.com',
-    storageBucket: 'eateaseappwebdb.firebasestorage.app',
-    measurementId: 'G-MRQ3S6GJK4',
+    apiKey: 'AIzaSyBHIp6vQrBzEjgX9SJ3VP5Lhpm_PjhnYb4',
+    appId: '1:804961042835:web:5b4bf7e7e1a4dd9e00a866',
+    messagingSenderId: '804961042835',
+    projectId: 'agosbuhay-db',
+    authDomain: 'agosbuhay-db.firebaseapp.com',
+    storageBucket: 'agosbuhay-db.appspot.com',
+    measurementId: 'G-QCPF44K9GE',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCMjgF2tvxdnDFZH94EnWLpJvThtl4Oxnw',
-    appId: '1:923569375017:android:b9f4625207cf5636749938',
-    messagingSenderId: '923569375017',
-    projectId: 'eateaseappwebdb',
-    storageBucket: 'eateaseappwebdb.firebasestorage.app',
+    apiKey: 'AIzaSyB8lUN3nYcdebl3zg5z1ZPPEZHLTidAZtc',
+    appId: '1:804961042835:android:d74c3b4038bae03200a866',
+    messagingSenderId: '804961042835',
+    projectId: 'agosbuhay-db',
+    storageBucket: 'agosbuhay-db.appspot.com',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAmapUnWCOxpcr_eAsRBhWVFZBm_jQdhTo',
-    appId: '1:923569375017:web:f3d7b9232c53c479749938',
-    messagingSenderId: '923569375017',
-    projectId: 'eateaseappwebdb',
-    authDomain: 'eateaseappwebdb.firebaseapp.com',
-    storageBucket: 'eateaseappwebdb.firebasestorage.app',
-    measurementId: 'G-PXNFS29XVD',
+    apiKey: 'AIzaSyBHIp6vQrBzEjgX9SJ3VP5Lhpm_PjhnYb4',
+    appId: '1:804961042835:web:20f5de29aec4def300a866',
+    messagingSenderId: '804961042835',
+    projectId: 'agosbuhay-db',
+    authDomain: 'agosbuhay-db.firebaseapp.com',
+    storageBucket: 'agosbuhay-db.appspot.com',
+    measurementId: 'G-7MHSQT0JT1',
   );
+
 }

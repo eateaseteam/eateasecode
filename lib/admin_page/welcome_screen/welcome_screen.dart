@@ -3,7 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../login_screen/login_screen.dart';
+import '../admin_dashboard_screen/admin_dashboard_screen.dart'; // Import admin screen
+import '../admin_home_screen_page/admin_home_screen_page.dart';
+import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
+import 'log_in_as_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -129,49 +132,52 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (user != null) {
       print("User is already logged in: ${user.uid}");
       try {
-        DocumentSnapshot userData = await FirebaseFirestore.instance
-            .collection('ADMIN_ACCOUNTS')
-            .doc(user.uid)
+        if (user.email == null) {
+          _showErrorSnackBar("Email is null. Unable to proceed.");
+          return; // Handle the case where email is null
+        }
+
+        // Fetch the restaurant document using UID as the document ID
+        DocumentSnapshot restaurantDoc = await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(user.uid) // Use UID to fetch the restaurant document
             .get();
 
-        if (userData.exists) {
-          Map<String, dynamic> data = userData.data() as Map<String, dynamic>;
+        // Fetch the admin document using UID
+        DocumentSnapshot adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(user.uid) // Use UID for admin
+            .get();
 
-          if (!data.containsKey('full_name') || !data.containsKey('role')) {
-            _showErrorSnackBar("User data is incomplete.");
-            print("Incomplete user data for user: ${user.uid}");
-            return;
-          }
-
-          String fullName = data['full_name'];
-          String role = data['role'];
-
-          print("User data: Full Name: $fullName, Role: $role");
-
-          if (role == 'admin') {
-            _showWelcomeSnackBar(fullName);
-            // Uncomment the line below when AdminRestaurantLoginScreen is implemented
-            // _navigateTo(AdminRestaurantLoginScreen(userId: user.uid));
-          } else {
-            _showErrorSnackBar("Unexpected role: $role");
-            print("Unexpected role for user: ${user.uid}, Role: $role");
-            return;
-          }
+        // If a restaurant is found
+        if (restaurantDoc.exists) {
+          var restaurantData = restaurantDoc.data() as Map<String, dynamic>;
+          String restaurantName = restaurantData['name'] ?? 'Restaurant Name'; // Safely fetch restaurant name
+          _showWelcomeSnackBar(restaurantName);
+          _navigateTo(RestaurantAdminDashboardPage(userId: user.uid)); // Pass UID to Restaurant screen
+        }
+        // If an admin is found
+        else if (adminDoc.exists) {
+          var adminData = adminDoc.data() as Map<String, dynamic>;
+          String fullName = adminData['full_name'] ?? 'Admin Name'; // Safely fetch admin name
+          _showWelcomeSnackBar(fullName);
+          _navigateTo(AdminHomeScreenPage(userId: user.uid)); // Pass UID to Admin screen
         } else {
           await FirebaseAuth.instance.signOut();
-          _showErrorSnackBar("User document does not exist. Logging out.");
-          print("User document does not exist for user: ${user.uid}. Logging out.");
-          _navigateTo(AdminRestaurantLoginScreen());
+          _showErrorSnackBar("No matching data found. Logging out.");
+          print("No matching data for user: ${user.uid}. Logging out.");
+          _navigateTo(LoginAsScreen());
         }
       } catch (e) {
         _showErrorSnackBar("Error fetching user data: $e");
         print("Error fetching user data for user: ${user.uid}, Error: $e");
       }
     } else {
-      print("User is not logged in. Navigating to admin login page.");
-      _navigateTo(AdminRestaurantLoginScreen());
+      print("User is not logged in. Navigating to login page.");
+      _navigateTo(LoginAsScreen());
     }
   }
+
 
   void _navigateTo(Widget screen) {
     Navigator.pushReplacement(
@@ -180,11 +186,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  void _showWelcomeSnackBar(String fullName) {
+  void _showWelcomeSnackBar(String name) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          "Welcome, $fullName!",
+          "Welcome, $name!",
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w500,
@@ -220,4 +226,3 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 }
-

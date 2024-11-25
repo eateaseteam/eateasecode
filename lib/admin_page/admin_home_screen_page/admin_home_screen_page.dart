@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -5,8 +8,13 @@ import '../add_new_admin_screen/add_new_admin_screen.dart';
 import '../admin_dashboard_screen/admin_dashboard_screen.dart';
 import '../customer_list_data/customer_list_data.dart';
 import '../list_or_add_restaurant_data/list_or_add_restaurant_data.dart';
+import '../welcome_screen/log_in_as_screen.dart';
 
 class AdminHomeScreenPage extends StatefulWidget {
+  final String? userId; // Make userId optional
+
+  AdminHomeScreenPage({this.userId});
+
   @override
   _AdminHomeScreenPageState createState() => _AdminHomeScreenPageState();
 }
@@ -14,6 +22,50 @@ class AdminHomeScreenPage extends StatefulWidget {
 class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
   String _currentPage = 'Dashboard';
   bool isDrawerOpen = true;
+  String? _adminEmail = 'Guest Admin'; // Default to "Guest Admin"
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userId != null) {
+      _fetchAdminEmail(); // Fetch admin email only if userId is provided
+    }
+  }
+
+  Future<void> _fetchAdminEmail() async {
+    try {
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(widget.userId)
+          .get();
+
+      if (adminDoc.exists) {
+        setState(() {
+          _adminEmail = adminDoc['email']; // Fetch the email from Firestore
+        });
+      }
+    } catch (e) {
+      print('Error fetching admin email: $e');
+    }
+  }
+
+  // Log out the user and navigate to the Welcome screen
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut(); // Sign out from Firebase Auth
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginAsScreen()), // Navigate to WelcomeScreen
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error logging out: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +95,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                 ),
                 SizedBox(width: 8.0),
                 Text(
-                  'admin@gmail.com',
+                  _adminEmail ?? 'Guest Admin', // Display the email or Guest Admin
                   style: GoogleFonts.inter(
                     color: Colors.grey[800],
                     fontSize: 16,
@@ -75,6 +127,19 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                   _buildListTile('Admin', Icons.person, Colors.blue[600]!),
                   _buildListTile('Customer', Icons.person_outline, Colors.blue[600]!),
                   _buildListTile('Restaurant', Icons.restaurant, Colors.blue[600]!),
+                  // Log Out Tile with red icon
+                  ListTile(
+                    leading: Icon(Icons.exit_to_app, color: Colors.red),
+                    title: Text(
+                      'Log Out',
+                      style: GoogleFonts.inter(
+                        color: Colors.red,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: _logout, // Log out when tapped
+                  ),
                 ],
               ),
             ),
@@ -86,7 +151,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                 : _currentPage == 'Customer'
                 ? CustomerListPage()
                 : _currentPage == 'Restaurant'
-                ? ListOrAddRestaurantData()
+                ? RestaurantManagement()
                 : Center(child: Text('Content for $_currentPage')),
           ),
         ],
