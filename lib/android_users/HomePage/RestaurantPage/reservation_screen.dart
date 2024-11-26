@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'restaurant_data_manager.dart';
 
 class ReservationScreen extends StatefulWidget {
   @override
@@ -13,6 +14,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
   late TabController _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final RestaurantDataManager _restaurantDataManager = RestaurantDataManager();
 
   @override
   void initState() {
@@ -26,30 +28,36 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     super.dispose();
   }
 
-  Stream<QuerySnapshot> _getReservations(String status) {
+  Stream<List<DocumentSnapshot>> _getReservations(String status) {
+    final userId = _auth.currentUser!.uid;
     return _firestore
-        .collection('reservations')
-        .where('userId', isEqualTo: _auth.currentUser!.uid)
+        .collectionGroup('reservations')
+        .where('userId', isEqualTo: userId)
         .where('status', isEqualTo: status)
-        .orderBy('dateTime', descending: true)
-        .snapshots();
+        .orderBy('reservationDateTime', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs);
   }
 
   Widget _buildReservationCard(DocumentSnapshot reservation) {
     final data = reservation.data() as Map<String, dynamic>;
     final restaurantName = data['restaurantName'] ?? 'Unknown Restaurant';
     final logoUrl = data['logoUrl'] ?? 'https://via.placeholder.com/80';
-    final dateTime = (data['dateTime'] as Timestamp?)?.toDate() ?? DateTime.now();
-    final totalPrice = (data['totalPrice'] as num?)?.toDouble() ?? 0.0;
+    final dateTime = (data['reservationDateTime'] as Timestamp).toDate();
+    final totalPrice = (data['totalPrice'] as num).toDouble();
     final status = data['status'] ?? 'pending';
     final reservationId = reservation.id;
+    final restaurantId = reservation.reference.parent.parent!.id;
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ReservationDetailsScreen(reservationId: reservationId),
+            builder: (context) => ReservationDetailsScreen(
+              reservationId: reservationId,
+              restaurantId: restaurantId,
+            ),
           ),
         );
       },
@@ -113,12 +121,12 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
               if (status == 'completed' || status == 'cancelled' || status == 'approved')
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.red, size: 28),
-                  onPressed: () => _confirmDelete(reservationId),
+                  onPressed: () => _confirmDelete(restaurantId, reservationId),
                 )
               else if (status == 'pending')
                 IconButton(
                   icon: Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
-                  onPressed: () => _showCancelDialog(context, reservationId),
+                  onPressed: () => _showCancelDialog(context, restaurantId, reservationId),
                 ),
             ],
           ),
@@ -127,7 +135,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     );
   }
 
-  void _confirmDelete(String reservationId) {
+  void _confirmDelete(String restaurantId, String reservationId) {
     showDialog(
       context: context,
       builder: (context) {
@@ -168,7 +176,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        _deleteReservation(reservationId);
+                        _deleteReservation(restaurantId, reservationId);
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
@@ -192,9 +200,14 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     );
   }
 
-  void _deleteReservation(String reservationId) async {
+  void _deleteReservation(String restaurantId, String reservationId) async {
     try {
-      await _firestore.collection('reservations').doc(reservationId).delete();
+      await _firestore
+          .collection('restaurants')
+          .doc(restaurantId)
+          .collection('reservations')
+          .doc(reservationId)
+          .delete();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Reservation deleted successfully.')),
       );
@@ -250,21 +263,16 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
   }
 
   Widget _buildReservationList(String status) {
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<List<DocumentSnapshot>>(
       stream: _getReservations(status),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: Colors.deepOrange));
+          return Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Error fetching reservations. Please try again.',
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.red),
-            ),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(
             child: Text(
               'No $status reservations',
@@ -273,270 +281,228 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
           );
         }
         return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
+          itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
-            return _buildReservationCard(snapshot.data!.docs[index]);
+            return _buildReservationCard(snapshot.data![index]);
           },
         );
       },
     );
   }
 
-  void _showCancelDialog(BuildContext context, String reservationId) {
+  void _showCancelDialog(BuildContext context, String restaurantId, String reservationId) {
     String? selectedReason;
     TextEditingController otherReasonController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: Container(
-            padding: EdgeInsets.all(24),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Container(
+                padding: EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Cancel Booking',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepOrange,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Cancel Booking',
+                            style: GoogleFonts.poppins(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.grey),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: Colors.grey),
-                        onPressed: () => Navigator.pop(context),
+                      SizedBox(height: 16),
+                      Text(
+                        'Select a reason for cancellation',
+                        style: GoogleFonts.poppins(fontSize: 16),
+                      ),
+                      SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: selectedReason,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        hint: Text('Choose a reason'),
+                        isExpanded: true,
+                        items: [
+                          'Change of plans',
+                          'Restaurant issues',
+                          'Not needed anymore',
+                          'Other',
+                        ].map((reason) {
+                          return DropdownMenuItem<String>(
+                            value: reason,
+                            child: Text(reason),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            selectedReason = newValue;
+                          });
+                        },
+                      ),
+                      if (selectedReason == 'Other')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: TextField(
+                            controller: otherReasonController,
+                            decoration: InputDecoration(
+                              labelText: 'Specify Reason',
+                              hintText: 'Enter reason',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              String finalReason = selectedReason == 'Other'
+                                  ? otherReasonController.text
+                                  : selectedReason ?? '';
+                              await _restaurantDataManager.cancelReservation(
+                                restaurantId,
+                                reservationId,
+                                finalReason,
+                              );
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Reservation cancelled successfully.')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error cancelling reservation: $e')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepOrange,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel Reservation',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Please select the reason for cancellation:',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  StatefulBuilder(
-                    builder: (context, setState) {
-                      return Column(
-                        children: [
-                          _buildRadioOption('Change in Plans', selectedReason, (value) {
-                            setState(() => selectedReason = value);
-                          }),
-                          _buildRadioOption('Duplicate Booking', selectedReason, (value) {
-                            setState(() => selectedReason = value);
-                          }),
-                          _buildRadioOption('Want to book another', selectedReason, (value) {
-                            setState(() => selectedReason = value);
-                          }),
-                          _buildRadioOption('Book by Mistake', selectedReason, (value) {
-                            setState(() => selectedReason = value);
-                          }),
-                          _buildRadioOption('Others:', selectedReason, (value) {
-                            setState(() => selectedReason = value);
-                          }),
-                          if (selectedReason == 'Others:')
-                            Padding(
-                              padding: EdgeInsets.only(top: 16),
-                              child: TextField(
-                                controller: otherReasonController,
-                                decoration: InputDecoration(
-                                  hintText: 'Enter your reason',
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                maxLines: 3,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                  SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        String reason = selectedReason == 'Others:' ? otherReasonController.text : selectedReason!;
-                        await FirebaseFirestore.instance.collection('reservations').doc(reservationId).update({
-                          'status': 'cancelled',
-                          'cancellationReason': reason,
-                        });
-
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        'Cancel Reservation',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
-    );
-  }
-
-  Widget _buildRadioOption(String label, String? selectedReason, Function(String?) onChanged) {
-    return Row(
-      children: [
-        Radio<String>(
-          value: label,
-          groupValue: selectedReason,
-          onChanged: onChanged,
-        ),
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16, color: Colors.black87),
-        ),
-      ],
     );
   }
 }
 
 class ReservationDetailsScreen extends StatelessWidget {
   final String reservationId;
+  final String restaurantId;
 
-  ReservationDetailsScreen({required this.reservationId});
-
-  Future<DocumentSnapshot> _getReservationDetails() async {
-    return await FirebaseFirestore.instance
-        .collection('reservations')
-        .doc(reservationId)
-        .get();
-  }
+  ReservationDetailsScreen({required this.reservationId, required this.restaurantId});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: _getReservationDetails(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(title: Text('Loading...')),
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Reservation Details'),
+        backgroundColor: Colors.deepOrange,
+      ),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(restaurantId)
+            .collection('reservations')
+            .doc(reservationId)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return Center(child: Text('Reservation not found'));
+          }
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final restaurantName = data['restaurantName'] ?? 'Unknown Restaurant';
+          final dateTime = (data['reservationDateTime'] as Timestamp).toDate();
+          final totalPrice = (data['totalPrice'] as num).toDouble();
+          final status = data['status'] ?? 'pending';
+          final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
 
-        if (!snapshot.hasData || !snapshot.data!.exists) {
-          return Scaffold(
-            appBar: AppBar(title: Text('Error')),
-            body: Center(child: Text('Reservation not found')),
-          );
-        }
-
-        final reservationData = snapshot.data!.data() as Map<String, dynamic>;
-        final List<dynamic> items = reservationData['items'] ?? [];
-        final restaurantName = reservationData['restaurantName'] ?? 'Unknown Restaurant';
-        final logoUrl = reservationData['logoUrl'] ?? 'https://via.placeholder.com/80';
-        final dateTime = (reservationData['dateTime'] as Timestamp).toDate();
-        final totalPrice = reservationData['totalPrice'].toDouble();
-        final status = reservationData['status'] ?? 'pending';
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Reservation Details'),
-            backgroundColor: Colors.deepOrange,
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      logoUrl,
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
                 Text(
                   restaurantName,
                   style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16),
-                _buildInfoRow('Date & Time', DateFormat('MMM d, yyyy - h:mm a').format(dateTime)),
-                _buildInfoRow('Status', status.toUpperCase()),
-                _buildInfoRow('Total Price', 'PHP ${totalPrice.toStringAsFixed(2)}'),
-                SizedBox(height: 24),
-                Text(
-                  'Ordered Items:',
-                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
-                ...items.map((item) {
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          item['image'] ?? 'https://via.placeholder.com/50',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      title: Text(item['name'] ?? 'Unknown Item'),
-                      subtitle: Text('Quantity: ${item['quantity']}'),
-                      trailing: Text('PHP ${(item['price'] * item['quantity']).toStringAsFixed(2)}'),
-                    ),
-                  );
-                }).toList(),
+                Text(
+                  'Date: ${DateFormat('MMM d, yyyy - h:mm a').format(dateTime)}',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                ),
+                Text(
+                  'Status: ${status.toUpperCase()}',
+                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  'Total: PHP ${totalPrice.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.deepOrange),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Ordered Items:',
+                  style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                ...items.map((item) => ListTile(
+                  title: Text(item['name'], style: GoogleFonts.poppins(fontSize: 16)),
+                  subtitle: Text('Quantity: ${item['quantity']}', style: GoogleFonts.poppins(fontSize: 14)),
+                  trailing: Text(
+                    'PHP ${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                )),
               ],
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(fontSize: 16),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
+

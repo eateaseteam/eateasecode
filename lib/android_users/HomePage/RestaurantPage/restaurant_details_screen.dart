@@ -243,6 +243,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (_restaurant == null) {
@@ -468,7 +469,8 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
           ElevatedButton(
             onPressed: _showBookingModal,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
+              backgroundColor: Colors.deepOrange
+              ,
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -778,3 +780,4 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
     );
   }
 }
+

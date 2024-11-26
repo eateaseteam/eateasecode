@@ -6,7 +6,6 @@ class RestaurantDataManager {
   final String collectionName = 'restaurants';
 
   /// Fetches reservations for a specific restaurant
-  /// Fetches reservations for a specific restaurant
   Stream<QuerySnapshot> getReservationsStream(String restaurantId) {
     return _firestore
         .collection(collectionName)
@@ -107,5 +106,18 @@ class RestaurantDataManager {
         .collection('reservations')
         .doc(reservationId)
         .get();
+  }
+
+  /// Cancels a reservation
+  Future<void> cancelReservation(String restaurantId, String reservationId, String reason) async {
+    await _firestore
+        .collection(collectionName)
+        .doc(restaurantId)
+        .collection('reservations')
+        .doc(reservationId)
+        .update({
+      'status': 'cancelled',
+      'cancellationReason': reason,
+    });
   }
 }
