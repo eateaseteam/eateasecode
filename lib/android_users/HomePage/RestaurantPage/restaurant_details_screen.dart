@@ -186,19 +186,29 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
     if (!_validateBooking()) return;
 
     try {
-      await _firestore.collection('reservations').add({
-        'userId': _auth.currentUser?.uid ?? '',
-        'restaurantId': widget.restaurantId,
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+
+      final reservationData = {
+        'userId': user.uid,
+        'userEmail': user.email,
         'restaurantName': _restaurant?['name'] ?? '',
         'logoUrl': _restaurant?['logoUrl'] ?? '',
-        'dateTime': DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day, _selectedTime!.hour, _selectedTime!.minute),
+        'reservationDateTime': DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day, _selectedTime!.hour, _selectedTime!.minute),
         'status': 'pending',
         'items': _cartItems.values.toList(),
         'guestCount': _guestCount,
         'totalPrice': _calculateTotalPrice(),
         'paymentMethod': _paymentMethod,
         'referenceNumber': _referenceNumber,
-      });
+      };
+
+      await _restaurantDataManager.addReservation(widget.restaurantId, reservationData);
 
       Fluttertoast.showToast(
         msg: 'Reservation successful!',
@@ -221,6 +231,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
 
       Navigator.pop(context);
     } catch (e) {
+      print('Error booking table: $e');
       Fluttertoast.showToast(
         msg: 'Failed to make reservation. Please try again.',
         toastLength: Toast.LENGTH_SHORT,
@@ -232,7 +243,6 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     if (_restaurant == null) {

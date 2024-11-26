@@ -153,7 +153,7 @@ class _RestaurantAdminDashboardPageState
                 : _currentPage == 'Menu'
                 ? MenuPage(userId: widget.userId) // This will display the MenuPage
                 : _currentPage == 'Reservation'
-                ? ReservationPage()
+                ? ReservationPage(restaurantId: widget.userId) // Pass the restaurantId here
                 : _currentPage == 'Orders'
                 ? OrdersPage()
                 : _currentPage == 'History'
@@ -177,3 +177,4 @@ class _RestaurantAdminDashboardPageState
     );
   }
 }
+

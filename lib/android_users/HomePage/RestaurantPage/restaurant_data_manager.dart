@@ -5,6 +5,27 @@ class RestaurantDataManager {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String collectionName = 'restaurants';
 
+  /// Fetches reservations for a specific restaurant
+  /// Fetches reservations for a specific restaurant
+  Stream<QuerySnapshot> getReservationsStream(String restaurantId) {
+    return _firestore
+        .collection(collectionName)
+        .doc(restaurantId)
+        .collection('reservations')
+        .orderBy('bookingTimestamp', descending: true)
+        .snapshots();
+  }
+
+  /// Updates the status of a reservation
+  Future<void> updateReservationStatus(String restaurantId, String reservationId, String newStatus) async {
+    await _firestore
+        .collection(collectionName)
+        .doc(restaurantId)
+        .collection('reservations')
+        .doc(reservationId)
+        .update({'status': newStatus});
+  }
+
   /// Fetches random popular food items from Firestore.
   Future<List<Map<String, dynamic>>> getRandomPopularFoods(int count) async {
     final QuerySnapshot snapshot = await _firestore.collection(collectionName).get();
@@ -49,5 +70,42 @@ class RestaurantDataManager {
       'phoneNumber': restaurant['phoneNumber'] ?? 'GCash number not available',
     };
   }
-}
 
+  /// Adds a new reservation to the restaurant's reservations subcollection
+  Future<void> addReservation(String restaurantId, Map<String, dynamic> reservationData) async {
+    final reservationWithTimestamp = {
+      ...reservationData,
+      'bookingTimestamp': FieldValue.serverTimestamp(),
+    };
+
+    // Ensure all string fields are not null
+    reservationWithTimestamp.forEach((key, value) {
+      if (value is String?) {
+        reservationWithTimestamp[key] = value ?? '';
+      }
+    });
+
+    await _firestore.collection(collectionName).doc(restaurantId).collection('reservations').add(reservationWithTimestamp);
+  }
+
+  /// Fetches reservations for a specific restaurant
+  Future<List<Map<String, dynamic>>> getReservationsForRestaurant(String restaurantId) async {
+    final QuerySnapshot reservationsSnapshot = await _firestore
+        .collection(collectionName)
+        .doc(restaurantId)
+        .collection('reservations')
+        .orderBy('bookingTimestamp', descending: true)
+        .get();
+
+    return reservationsSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+  }
+
+  Future<DocumentSnapshot> getReservationDetails(String restaurantId, String reservationId) async {
+    return await _firestore
+        .collection(collectionName)
+        .doc(restaurantId)
+        .collection('reservations')
+        .doc(reservationId)
+        .get();
+  }
+}

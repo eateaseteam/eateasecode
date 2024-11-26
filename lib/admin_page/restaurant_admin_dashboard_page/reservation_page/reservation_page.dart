@@ -1,199 +1,116 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../android_users/HomePage/RestaurantPage/restaurant_data_manager.dart';
 
 class ReservationPage extends StatefulWidget {
+  final String restaurantId;
+
+  const ReservationPage({Key? key, required this.restaurantId}) : super(key: key);
+
   @override
   _ReservationPageState createState() => _ReservationPageState();
 }
 
 class _ReservationPageState extends State<ReservationPage> {
-  final TextEditingController _searchController = TextEditingController();
+  final RestaurantDataManager _restaurantDataManager = RestaurantDataManager();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0), // Reduced padding
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Reservation Management',
-                style: GoogleFonts.inter(
-                  fontSize: 20, // Slightly smaller font size
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              Container(
-                width: 250, // Reduced width for search field
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search reservations...',
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16), // Reduced spacing
-          Expanded(
-            child: ListView(
-              children: [
-                _buildReservationSection(
-                  'Pending Reservations',
-                  [
-                    _ReservationData(
-                      id: '3',
-                      customerName: 'Danyel Rodriguez',
-                      orderId: '3',
-                      guests: '5',
-                      payment: 'GCash',
-                      dateTime: DateTime.now(),
-                      message: 'No Peanut',
-                      refNum: '781 888 1893',
-                      status: ReservationStatus.pending,
-                    ),
-                  ],
-                  Colors.orange,
-                ),
-                SizedBox(height: 16), // Reduced spacing
-                _buildReservationSection(
-                  'Approved Reservations',
-                  [
-                    _ReservationData(
-                      id: '2',
-                      customerName: 'John Troller',
-                      orderId: '2',
-                      guests: '7',
-                      payment: 'GCash',
-                      dateTime: DateTime.now(),
-                      message: 'None',
-                      refNum: '123 654 0032',
-                      status: ReservationStatus.approved,
-                    ),
-                  ],
-                  Colors.green,
-                ),
-                SizedBox(height: 16), // Reduced spacing
-                _buildReservationSection(
-                  'Complete Reservations',
-                  [
-                    _ReservationData(
-                      id: '1',
-                      customerName: 'Bryan Agel',
-                      orderId: '1',
-                      guests: '7',
-                      payment: 'GCash',
-                      dateTime: DateTime.now(),
-                      message: 'Add extra 1 rice',
-                      refNum: '321 212 8549',
-                      status: ReservationStatus.completed,
-                    ),
-                  ],
-                  Colors.blue,
-                ),
-                SizedBox(height: 16), // Reduced spacing
-                _buildReservationSection(
-                  'Cancelled Reservations',
-                  [
-                    _ReservationData(
-                      id: '4',
-                      customerName: 'Lara Croft',
-                      orderId: '4',
-                      guests: '2',
-                      payment: 'Credit Card',
-                      dateTime: DateTime.now(),
-                      message: 'Family emergency',
-                      refNum: '456 789 0123',
-                      status: ReservationStatus.cancelled,
-                    ),
-                  ],
-                  Colors.red,
+    return Scaffold(
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              pinned: true,
+              title: Text('Reservation Management', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    showSearch(
+                      context: context,
+                      delegate: ReservationSearchDelegate(widget.restaurantId),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-        ],
+            StreamBuilder<QuerySnapshot>(
+              stream: _restaurantDataManager.getReservationsStream(widget.restaurantId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+                }
+
+                if (snapshot.hasError) {
+                  return SliverFillRemaining(child: Center(child: Text('Error: ${snapshot.error}')));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return SliverFillRemaining(child: Center(child: Text('No reservations found.')));
+                }
+
+                final reservations = snapshot.data!.docs;
+
+                return SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildReservationSection('Pending', reservations.where((doc) => doc['status'] == 'pending').toList(), Colors.orange),
+                    _buildReservationSection('Approved', reservations.where((doc) => doc['status'] == 'approved').toList(), Colors.green),
+                    _buildReservationSection('Complete', reservations.where((doc) => doc['status'] == 'completed').toList(), Colors.blue),
+                    _buildReservationSection('Cancelled', reservations.where((doc) => doc['status'] == 'cancelled').toList(), Colors.red),
+                  ]),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildReservationSection(
-      String title,
-      List<_ReservationData> reservations,
-      Color accentColor,
-      ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+  Widget _buildReservationSection(String title, List<QueryDocumentSnapshot> reservations, Color accentColor) {
+    return Card(
+      margin: EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(12.0), // Reduced padding
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 16, // Slightly smaller font size
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+              '$title Reservations',
+              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
               columns: [
-                DataColumn(label: Text('ID')),
-                DataColumn(label: Text('Customer')),
-                DataColumn(label: Text('Order ID')),
+                DataColumn(label: Text('Customer Email')),
+                DataColumn(label: Text('Order Details')),
                 DataColumn(label: Text('Guests')),
-                DataColumn(label: Text('Payment')),
                 DataColumn(label: Text('Date/Time')),
-                DataColumn(label: Text('Message')),
+                DataColumn(label: Text('Total Price')),
+                DataColumn(label: Text('Payment')),
                 DataColumn(label: Text('Ref. Number')),
                 DataColumn(label: Text('Status')),
                 DataColumn(label: Text('Actions')),
               ],
               rows: reservations.map((reservation) {
+                final data = reservation.data() as Map<String, dynamic>;
                 return DataRow(
                   cells: [
-                    DataCell(Text(reservation.id)),
-                    DataCell(Text(reservation.customerName)),
-                    DataCell(Text(reservation.orderId)),
-                    DataCell(Text(reservation.guests)),
-                    DataCell(Text(reservation.payment)),
-                    DataCell(Text(DateFormat('MM/dd/yy HH:mm').format(reservation.dateTime))),
-                    DataCell(Text(reservation.message)),
-                    DataCell(Text(reservation.refNum)),
-                    DataCell(_buildStatusBadge(reservation.status, accentColor)),
-                    DataCell(_buildActionButtons(reservation.status)),
+                    DataCell(Text(data['userEmail'] ?? 'N/A')),
+                    DataCell(_buildOrderDetails(data['items'] ?? [])),
+                    DataCell(Text(data['guestCount'].toString())),
+                    DataCell(Text(DateFormat('MM/dd HH:mm').format((data['reservationDateTime'] as Timestamp).toDate()))),
+                    DataCell(Text('PHP ${data['totalPrice'].toStringAsFixed(2)}')),
+                    DataCell(Text(data['paymentMethod'] ?? 'N/A')),
+                    DataCell(Text(data['referenceNumber'] ?? 'N/A')),
+                    DataCell(_buildStatusBadge(data['status'], accentColor)),
+                    DataCell(_buildActionButtons(data['status'], reservation.id)),
                   ],
                 );
               }).toList(),
@@ -204,121 +121,151 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  Widget _buildStatusBadge(ReservationStatus status, Color color) {
+  Widget _buildOrderDetails(List<dynamic> items) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Reduced padding
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        status.toString().split('.').last,
-        style: GoogleFonts.inter(
-          color: color,
-          fontWeight: FontWeight.w500,
-          fontSize: 12, // Smaller font size
-        ),
+      constraints: BoxConstraints(maxWidth: 200),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: items.map((item) {
+          return Text('${item['name']} x ${item['quantity']}', overflow: TextOverflow.ellipsis);
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildActionButtons(ReservationStatus status) {
+  Widget _buildStatusBadge(String status, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        status,
+        style: GoogleFonts.inter(color: color, fontWeight: FontWeight.w500, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(String status, String reservationId) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (status == ReservationStatus.pending) ...[
+        if (status == 'pending') ...[
           IconButton(
             icon: Icon(Icons.check_circle_outline, color: Colors.green),
-            onPressed: () {
-              // Approve logic
-            },
+            onPressed: () => _updateReservationStatus(reservationId, 'approved'),
             tooltip: 'Approve',
           ),
           IconButton(
             icon: Icon(Icons.cancel_outlined, color: Colors.red),
-            onPressed: () {
-              // Reject logic
-            },
-            tooltip: 'Reject',
+            onPressed: () => _updateReservationStatus(reservationId, 'cancelled'),
+            tooltip: 'Cancel',
           ),
-        ] else if (status == ReservationStatus.approved) ...[
+        ] else if (status == 'approved') ...[
           IconButton(
             icon: Icon(Icons.check_circle, color: Colors.blue),
-            onPressed: () {
-              // Complete logic
-            },
+            onPressed: () => _updateReservationStatus(reservationId, 'completed'),
             tooltip: 'Complete',
-          ),
-          IconButton(
-            icon: Icon(Icons.cancel, color: Colors.red),
-            onPressed: () {
-              // Cancel logic
-            },
-            tooltip: 'Cancel',
-          ),
-        ] else if (status == ReservationStatus.completed) ...[
-          IconButton(
-            icon: Icon(Icons.check_circle_outline, color: Colors.green),
-            onPressed: () {
-              // Mark as completed logic (or similar)
-            },
-            tooltip: 'Completed',
-          ),
-          IconButton(
-            icon: Icon(Icons.cancel, color: Colors.red),
-            onPressed: () {
-              // Cancel logic
-            },
-            tooltip: 'Cancel',
-          ),
-        ] else if (status == ReservationStatus.cancelled) ...[
-          IconButton(
-            icon: Icon(Icons.restore, color: Colors.blue),
-            onPressed: () {
-              // Restore logic
-            },
-            tooltip: 'Restore',
           ),
         ],
         IconButton(
           icon: Icon(Icons.more_vert, color: Colors.grey),
           onPressed: () {
-            // More actions
+            // Implement more actions if needed
           },
           tooltip: 'More',
         ),
       ],
     );
   }
+
+  void _updateReservationStatus(String reservationId, String newStatus) async {
+    try {
+      await _restaurantDataManager.updateReservationStatus(widget.restaurantId, reservationId, newStatus);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reservation status updated successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update reservation status: $e')),
+      );
+    }
+  }
 }
 
-enum ReservationStatus {
-  pending,
-  approved,
-  completed,
-  cancelled,
-}
+class ReservationSearchDelegate extends SearchDelegate {
+  final String restaurantId;
+  final RestaurantDataManager _restaurantDataManager = RestaurantDataManager();
 
-class _ReservationData {
-  final String id;
-  final String customerName;
-  final String orderId;
-  final String guests;
-  final String payment;
-  final DateTime dateTime;
-  final String message;
-  final String refNum;
-  final ReservationStatus status;
+  ReservationSearchDelegate(this.restaurantId);
 
-  _ReservationData({
-    required this.id,
-    required this.customerName,
-    required this.orderId,
-    required this.guests,
-    required this.payment,
-    required this.dateTime,
-    required this.message,
-    required this.refNum,
-    required this.status,
-  });
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return _buildSearchResults();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return _buildSearchResults();
+  }
+
+  Widget _buildSearchResults() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _restaurantDataManager.getReservationsStream(restaurantId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(child: Text('No reservations found.'));
+        }
+
+        final reservations = snapshot.data!.docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['userEmail'].toString().toLowerCase().contains(query.toLowerCase()) ||
+              data['referenceNumber'].toString().toLowerCase().contains(query.toLowerCase());
+        }).toList();
+
+        return ListView.builder(
+          itemCount: reservations.length,
+          itemBuilder: (context, index) {
+            final data = reservations[index].data() as Map<String, dynamic>;
+            return ListTile(
+              title: Text(data['userEmail'] ?? 'N/A'),
+              subtitle: Text(DateFormat('MM/dd HH:mm').format((data['reservationDateTime'] as Timestamp).toDate())),
+              trailing: Text(data['status']),
+            );
+          },
+        );
+      },
+    );
+  }
 }
