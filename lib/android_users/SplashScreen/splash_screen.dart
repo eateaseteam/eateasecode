@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import '../../SignIn_Page/sign_in_screen.dart';
 import 'package:http/http.dart' as http;
@@ -102,30 +103,72 @@ class _SplashState extends State<Splash> {
   void _showNoInternetDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[800], // Set the background color of the dialog
-        title: Text(
-          'No Internet Connection',
-          style: TextStyle(color: Colors.white), // Set the text color of the title
-        ),
-        content: Text(
-          'Please connect to the internet and try again.',
-          style: TextStyle(color: Colors.white), // Set the text color of the content
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Close the app when there is no internet connection
-              exit(0);
-            },
-            child: Text(
-              'OK',
-            ),
-            style: TextButton.styleFrom(foregroundColor: Colors.green),
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
+          child: Container(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No Internet Connection',
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepOrange,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Please connect to the internet and try again.',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // Optionally, you can add logic to retry connection or navigate
+                        // For example, you might want to open settings or retry logic here
+                        exit(0); // Close the app if desired
+                      },
+                      child: Text(
+                        'OK',
+                        style: GoogleFonts.poppins(color: Colors.grey),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // Optionally, you can add logic to retry connection or navigate
+                        // For example, you might want to open settings or retry logic here
+                        exit(0); // Close the app if desired
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Close App',
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

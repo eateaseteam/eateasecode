@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 
@@ -32,6 +33,148 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     _tabController = TabController(length: types.length, vsync: this);
   }
 
+  Future<bool> _verifyAdminPassword(String password) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        AuthCredential credential = EmailAuthProvider.credential(email: user.email!, password: password);
+        await user.reauthenticateWithCredential(credential);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error verifying admin password: $e');
+      return false;
+    }
+  }
+
+  void _showAddMenuItemDialog() {
+    final passwordController = TextEditingController();
+    bool _obscurePassword = true; // State variable for password visibility
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text('Verify Admin', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Admin Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword; // Toggle password visibility
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (await _verifyAdminPassword(passwordController.text)) {
+                Navigator.pop(context);
+                _showAddMenuItemFormDialog();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Invalid admin password'), backgroundColor: Colors.red),
+                );
+              }
+            },
+            child: Text('Verify'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  void _showAddMenuItemFormDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add New Menu Item', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _menuItemController,
+                decoration: InputDecoration(labelText: 'Menu Item'),
+              ),
+              TextField(
+                controller: _priceController,
+                decoration: InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                decoration: InputDecoration(labelText: 'Type'),
+                items: types.where((e) => e != 'All').map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (value) => setState(() => _selectedType = value!),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: Text('Select Image'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              ),
+              if (_imageBytes != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Image.memory(
+                    _imageBytes!,
+                    height: 100,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Text('Error loading image');
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: _addMenuItem,
+            child: _isUploading ? CircularProgressIndicator(color: Colors.white) : Text('Add'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _addMenuItem() async {
     final menuItem = _menuItemController.text;
     final price = _priceController.text;
@@ -45,7 +188,7 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
         await _saveMenuItemToFirestore(menuItem, price, description, imageUrl);
         _resetForm();
         _showSnackBar('Menu item added successfully', Colors.green);
-        Navigator.pop(context); // Close the dialog
+        Navigator.pop(context);
       } catch (e) {
         _showSnackBar('Failed to add menu item: ${e.toString()}', Colors.red);
       } finally {
@@ -328,69 +471,6 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     );
   }
 
-  void _showAddMenuItemDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add New Menu Item', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _menuItemController,
-                decoration: InputDecoration(labelText: 'Menu Item'),
-              ),
-              TextField(
-                controller: _priceController,
-                decoration: InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedType,
-                decoration: InputDecoration(labelText: 'Type'),
-                items: types.where((e) => e != 'All').map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                onChanged: (value) => setState(() => _selectedType = value!),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickImage,
-                child: Text('Select Image'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              ),
-              if (_imageBytes != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Image.memory(
-                    _imageBytes!,
-                    height: 100,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Text('Error loading image');
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: _addMenuItem,
-            child: _isUploading ? CircularProgressIndicator(color: Colors.white) : Text('Add'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showEditMenuItemDialog(String docId, Map<String, dynamic> item) {
     _menuItemController.text = item['name'];
     _priceController.text = item['price'].toString();
@@ -433,14 +513,18 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
             child: Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () {
-              _editMenuItem(docId, {
-                'name': _menuItemController.text,
-                'price': double.parse(_priceController.text),
-                'description': _descriptionController.text,
-                'type': _selectedType,
-              });
-              Navigator.pop(context);
+            onPressed: () async {
+              if (await _verifyAdminPassword(await _showPasswordDialog())) {
+                _editMenuItem(docId, {
+                  'name': _menuItemController.text,
+                  'price': double.parse(_priceController.text),
+                  'description': _descriptionController.text,
+                  'type': _selectedType,
+                });
+                Navigator.pop(context);
+              } else {
+                _showSnackBar('Invalid admin password', Colors.red);
+              }
             },
             child: Text('Update'),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
@@ -462,9 +546,13 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
             child: Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () {
-              _deleteMenuItem(docId);
-              Navigator.pop(context);
+            onPressed: () async {
+              if (await _verifyAdminPassword(await _showPasswordDialog())) {
+                _deleteMenuItem(docId);
+                Navigator.pop(context);
+              } else {
+                _showSnackBar('Invalid admin password', Colors.red);
+              }
             },
             child: Text('Delete'),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -472,6 +560,67 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
         ],
       ),
     );
+  }
+
+  Future<String> _showPasswordDialog() async {
+    final passwordController = TextEditingController();
+    bool _obscurePassword = true; // State variable for password visibility
+
+    // Use the await to capture the result from the dialog
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Enter Admin Password', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return TextField(
+              controller: passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword; // Toggle password visibility
+                    });
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ''), // Return empty string if canceled
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context, passwordController.text); // Return the password when verified
+            },
+            child: Text('Verify'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          ),
+        ],
+      ),
+    );
+
+    // Ensure a non-null value is returned by providing a default if result is null
+    return result ?? '';  // Return empty string if result is null
+  }
+
+
+  @override
+  void dispose() {
+    _menuItemController.dispose();
+    _priceController.dispose();
+    _descriptionController.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 }
 

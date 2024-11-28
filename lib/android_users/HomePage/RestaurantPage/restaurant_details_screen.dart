@@ -29,6 +29,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
   int _guestCount = 1;
   String _paymentMethod = 'GCash';
   String _referenceNumber = '';
+  String _orderNotes = ''; // New field for order notes
 
   @override
   void initState() {
@@ -206,6 +207,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         'totalPrice': _calculateTotalPrice(),
         'paymentMethod': _paymentMethod,
         'referenceNumber': _referenceNumber,
+        'orderNotes': _orderNotes, // Add order notes to reservation data
       };
 
       await _restaurantDataManager.addReservation(widget.restaurantId, reservationData);
@@ -227,6 +229,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         _selectedDate = null;
         _selectedTime = null;
         _cartItems.clear();
+        _orderNotes = ''; // Clear order notes after successful booking
       });
 
       Navigator.pop(context);
@@ -469,8 +472,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
           ElevatedButton(
             onPressed: _showBookingModal,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange
-              ,
+              backgroundColor: Colors.deepOrange,
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -664,6 +666,27 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                       }).toList(),
                     ),
                     SizedBox(height: 20),
+                    // Add the new TextField for order notes
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Add a note to your order',
+                        hintText: 'e.g., Allergies, special requests',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.deepOrange),
+                        ),
+                      ),
+                      maxLines: 3,
+                      onChanged: (value) {
+                        setModalState(() {
+                          _orderNotes = value;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -780,4 +803,3 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
     );
   }
 }
-

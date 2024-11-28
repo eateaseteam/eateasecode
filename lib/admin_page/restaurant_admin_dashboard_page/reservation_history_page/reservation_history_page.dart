@@ -166,7 +166,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                     DataCell(Text(reservation.id)),
                     DataCell(Text(data['userEmail'] ?? 'N/A')),
                     DataCell(Text(data['guestCount'].toString())),
-                    DataCell(Text(DateFormat('MM/dd/yy HH:mm').format((data['reservationDateTime'] as Timestamp).toDate()))),
+                    DataCell(Text(DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate()))),
                     DataCell(_buildStatusBadge(data['status'])),
                     DataCell(_buildActionButtons(reservation.id)),
                   ],
@@ -253,16 +253,40 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
             }
 
             Map<String, dynamic> data = snapshot.data!.data() as Map<String, dynamic>;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _detailItem('Customer', data['userEmail']),
-                _detailItem('Guests', data['guestCount'].toString()),
-                _detailItem('Date', DateFormat('MM/dd/yy HH:mm').format((data['reservationDateTime'] as Timestamp).toDate())),
-                _detailItem('Status', data['status']),
-                _detailItem('Total Price', 'PHP ${data['totalPrice']}'),
-              ],
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _detailItem('Customer', data['userEmail']),
+                  _detailItem('Guests', data['guestCount'].toString()),
+                  _detailItem('Date', DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
+                  _detailItem('Status', data['status']),
+                  _detailItem('Total Price', 'PHP ${data['totalPrice']}'),
+                  SizedBox(height: 16),
+                  Text('Order Items', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ...(data['items'] as List<dynamic>).map((item) =>
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(item['name'], style: GoogleFonts.poppins()),
+                            Text('x${item['quantity']}', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      )
+                  ),
+                  SizedBox(height: 16),
+                  Text('Order Notes', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(data['orderNotes'] ?? 'No order notes', style: GoogleFonts.poppins()),
+                  if (data['status'] == 'cancelled') ...[
+                    SizedBox(height: 16),
+                    Text('Cancellation Reason', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(data['cancellationReason'] ?? 'No reason provided', style: GoogleFonts.poppins()),
+                  ],
+                ],
+              ),
             );
           },
         ),
@@ -338,3 +362,4 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     }
   }
 }
+

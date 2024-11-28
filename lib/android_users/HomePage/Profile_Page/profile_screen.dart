@@ -23,28 +23,97 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String? profileImageUrl;
   final ImagePicker picker = ImagePicker();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  bool _isEditing = false;
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    super.dispose();
+  }
 
   Future<void> _logout(BuildContext context) async {
-    try {
-      await FirebaseAuth.instance.signOut();
-      SystemNavigator.pop();
-    } catch (e) {
-      print('Logout failed: $e');
-    }
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Confirm Logout',
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepOrange,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Are you sure you want to log out?',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.poppins(color: Colors.grey),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        try {
+                          await FirebaseAuth.instance.signOut();
+                          SystemNavigator.pop();
+                        } catch (e) {
+                          print('Logout failed: $e');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _updateProfileImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // Upload the image to Firebase Storage
       String fileName = 'profile_images/${FirebaseAuth.instance.currentUser!.uid}.jpg';
       File imageFile = File(pickedFile.path);
       try {
         await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
         String downloadUrl = await FirebaseStorage.instance.ref(fileName).getDownloadURL();
 
-        // Update Firestore document with new image URL
         await FirebaseFirestore.instance.collection('users').doc(widget.email).update({
           'profileImageUrl': downloadUrl,
         });
@@ -64,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showProfileDialog(BuildContext context, String? profileImageUrl) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7), // Dimmed background
+      barrierColor: Colors.black.withOpacity(0.7),
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -72,7 +141,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Full-screen blur
               Positioned.fill(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -81,7 +149,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              // Centered profile image
               CircleAvatar(
                 radius: 100,
                 backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
@@ -93,6 +160,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+  }
+
+  Future<void> _updateProfile() async {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final fullName = '$firstName $lastName'.trim();
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(widget.email).update({
+        'firstName': firstName,
+        'lastName': lastName,
+        'fullName': fullName,
+      });
+
+      setState(() {
+        _isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile updated successfully')),
+      );
+    } catch (e) {
+      print('Error updating profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating profile')),
+      );
+    }
   }
 
   @override
@@ -110,6 +204,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.black,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.close : Icons.edit, color: Colors.black),
+            onPressed: () {
+              setState(() {
+                _isEditing = !_isEditing;
+                if (!_isEditing) {
+                  _firstNameController.clear();
+                  _lastNameController.clear();
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance.collection('users').doc(widget.email).snapshots(),
@@ -126,86 +234,175 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final userData = userDoc.data() as Map<String, dynamic>?;
           final fullName = userData?['fullName'] ?? 'No Name';
           final userEmail = userData?['email'] ?? 'No Email';
-          profileImageUrl = userData != null &&
-              userData.containsKey('profileImageUrl') &&
-              userData['profileImageUrl'] != null
-              ? userData['profileImageUrl'] as String
-              : null;
+          profileImageUrl = userData?['profileImageUrl'] as String?;
 
+          if (!_isEditing) {
+            _firstNameController.text = userData?['firstName'] ?? '';
+            _lastNameController.text = userData?['lastName'] ?? '';
+          }
 
-          return Padding(
+          return SingleChildScrollView(
             padding: EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildProfileHeader(fullName: fullName, email: userEmail),
                 SizedBox(height: 24),
-                _buildProfileItem(
-                  icon: Icons.payment,
-                  title: 'Payment',
-                  onTap: () {
-                    // Navigate to payment settings
-                  },
-                ),
-                SizedBox(height: 16),
-                _buildProfileItem(
-                  icon: Icons.privacy_tip,
-                  title: 'Privacy & Policy',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
-                    );
-                  },
-                ),
-                SizedBox(height: 16),
-                _buildProfileItem(
-                  icon: Icons.help_outline,
-                  title: 'FAQs',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => FAQScreen()),
-                    );
-                  },
-                ),
-                SizedBox(height: 16),
-                _buildProfileItem(
-                  icon: Icons.info_outline,
-                  title: 'About',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AboutUsScreen()),
-                    );
-                  },
-                ),
-                Spacer(),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () => _logout(context),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                if (_isEditing) ...[
+                  _buildEditProfileForm(),
+                  SizedBox(height: 16),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _updateProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       ),
-                    ),
-                    child: Text(
-                      'Logout',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                      child: Text(
+                        'Save Changes',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(height: 24),
+                ] else ...[
+                  _buildProfileItem(
+                    icon: Icons.payment,
+                    title: 'Payment',
+                    onTap: () {
+                      _showGcashDialog(context); // Show GCash dialog
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  _buildProfileItem(
+                    icon: Icons.privacy_tip,
+                    title: 'Privacy & Policy',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  _buildProfileItem(
+                    icon: Icons.help_outline,
+                    title: 'FAQs',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FAQScreen()),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  _buildProfileItem(
+                    icon: Icons.info_outline,
+                    title: 'About',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AboutUsScreen()),
+                      );
+                    },
+                  ),
+                ],
+                if (!_isEditing) ...[
+                  SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () => _logout(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  void _showGcashDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'GCash Payment',
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepOrange,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                Image.asset(
+                  'lib/assets/app_images/gcash-logo.png', // Ensure this path is correct
+                  height: 100,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Use GCash for your payments.',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'With GCash, you can easily pay for your purchases and services online. It offers a fast and secure way to manage your transactions without the need for cash.',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context), // Close dialog
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Close',
+                    style: GoogleFonts.poppins(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -295,7 +492,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-
   Widget _buildProfileItem({
     required IconData icon,
     required String title,
@@ -340,6 +536,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEditProfileForm() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Edit Profile',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: 16),
+          TextFormField(
+            controller: _firstNameController,
+            decoration: InputDecoration(
+              labelText: 'First Name',
+              labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.deepOrange),
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+            style: GoogleFonts.poppins(),
+          ),
+          SizedBox(height: 16),
+          TextFormField(
+            controller: _lastNameController,
+            decoration: InputDecoration(
+              labelText: 'Last Name',
+              labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.deepOrange),
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+            style: GoogleFonts.poppins(),
+          ),
+        ],
       ),
     );
   }

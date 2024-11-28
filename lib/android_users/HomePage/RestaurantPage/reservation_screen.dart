@@ -118,16 +118,18 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                   ],
                 ),
               ),
-              if (status == 'completed' || status == 'cancelled' || status == 'approved')
+              if (status == 'completed' || status == 'approved')
+                Icon(Icons.check_circle, color: Colors.green, size: 28)
+              else if (status == 'cancelled')
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.red, size: 28),
                   onPressed: () => _confirmDelete(restaurantId, reservationId),
                 )
               else if (status == 'pending')
-                IconButton(
-                  icon: Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
-                  onPressed: () => _showCancelDialog(context, restaurantId, reservationId),
-                ),
+                  IconButton(
+                    icon: Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
+                    onPressed: () => _showCancelDialog(context, restaurantId, reservationId),
+                  ),
             ],
           ),
         ),
@@ -461,6 +463,8 @@ class ReservationDetailsScreen extends StatelessWidget {
           final totalPrice = (data['totalPrice'] as num).toDouble();
           final status = data['status'] ?? 'pending';
           final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
+          final orderNotes = data['orderNotes'] as String? ?? 'No notes provided';
+          final cancellationReason = data['cancellationReason'] as String? ?? 'Not specified';
 
           return SingleChildScrollView(
             padding: EdgeInsets.all(16),
@@ -480,6 +484,11 @@ class ReservationDetailsScreen extends StatelessWidget {
                   'Status: ${status.toUpperCase()}',
                   style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
+                if (status == 'cancelled')
+                  Text(
+                    'Cancellation Reason: $cancellationReason',
+                    style: GoogleFonts.poppins(fontSize: 16, color: Colors.red),
+                  ),
                 Text(
                   'Total: PHP ${totalPrice.toStringAsFixed(2)}',
                   style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.deepOrange),
@@ -497,6 +506,15 @@ class ReservationDetailsScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 )),
+                SizedBox(height: 16),
+                Text(
+                  'Order Notes:',
+                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  orderNotes,
+                  style: GoogleFonts.poppins(fontSize: 16),
+                ),
               ],
             ),
           );
@@ -505,4 +523,3 @@ class ReservationDetailsScreen extends StatelessWidget {
     );
   }
 }
-

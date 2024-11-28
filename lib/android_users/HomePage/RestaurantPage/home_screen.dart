@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../NotificationPage/notification_screen.dart';
 import 'restaurant_details_screen.dart';
 import 'restaurant_data_manager.dart';
 
@@ -114,7 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: Icon(Icons.notifications_none, size: 28, color: Colors.black),
             onPressed: () {
-              // Handle notification tap
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationScreen()),
+              );
             },
           ),
         ],

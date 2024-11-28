@@ -121,7 +121,11 @@ class _ReservationPageState extends State<ReservationPage> {
           onPressed: () {
             showSearch(
               context: context,
-              delegate: ReservationSearchDelegate(widget.restaurantId),
+              delegate: ReservationSearchDelegate(
+                widget.restaurantId,
+                context,
+                _showReservationDetails,
+              ),
             );
           },
         ),
@@ -223,7 +227,7 @@ class _ReservationPageState extends State<ReservationPage> {
                         style: GoogleFonts.inter(),
                       )),
                       DataCell(Text(
-                        DateFormat('MM/dd HH:mm')
+                        DateFormat('MM/dd h:mm a')
                             .format((data['reservationDateTime'] as Timestamp).toDate()),
                         style: GoogleFonts.inter(),
                       )),
@@ -333,7 +337,7 @@ class _ReservationPageState extends State<ReservationPage> {
         ],
         IconButton(
           icon: Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: () => _confirmDeleteReservation(reservationId), // Call confirm delete method
+          onPressed: () => _confirmDeleteReservation(reservationId),
           tooltip: 'Delete',
         ),
         PopupMenuButton<String>(
@@ -344,7 +348,7 @@ class _ReservationPageState extends State<ReservationPage> {
                 _showReservationDetails(data);
                 break;
               case 'delete':
-                _confirmDeleteReservation(reservationId); // Handle confirm delete in the menu
+                _confirmDeleteReservation(reservationId);
                 break;
             }
           },
@@ -408,7 +412,7 @@ class _ReservationPageState extends State<ReservationPage> {
         child: Container(
           padding: EdgeInsets.all(24),
           constraints: BoxConstraints(maxWidth: 500),
-          child: SingleChildScrollView( // Make the content scrollable
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,10 +437,10 @@ class _ReservationPageState extends State<ReservationPage> {
                 _buildDetailRow('Customer', data['userEmail'] ?? 'N/A'),
                 _buildDetailRow('Reference Number', data['referenceNumber'] ?? 'N/A'),
                 _buildDetailRow('Date/Time',
-                    DateFormat('MM/dd/yy HH:mm').format((data['reservationDateTime'] as Timestamp).toDate())),
+                    DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
                 _buildDetailRow('Guests', '${data['guestCount']}'),
                 _buildDetailRow('Payment Method', data['paymentMethod'] ?? 'N/A'),
-                _buildDetailRow('Total Price', 'PHP ${data['totalPrice']?.toStringAsFixed(2) ?? '0.00'}'), // Handle null totalPrice
+                _buildDetailRow('Total Price', 'PHP ${data['totalPrice']?.toStringAsFixed(2) ?? '0.00'}'),
                 SizedBox(height: 16),
                 Text(
                   'Order Items',
@@ -466,7 +470,27 @@ class _ReservationPageState extends State<ReservationPage> {
                   ),
                 )),
                 SizedBox(height: 16),
-                if ((data['notes'] ?? '').isNotEmpty) ...[ // Check for non-empty notes
+                Text(
+                  'Order Notes',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    data['orderNotes'] ?? 'No order notes',
+                    style: GoogleFonts.inter(fontSize: 14),
+                  ),
+                ),
+                if ((data['notes'] ?? '').isNotEmpty) ...[
+                  SizedBox(height: 16),
                   Text(
                     'Notes',
                     style: GoogleFonts.inter(
@@ -483,7 +507,29 @@ class _ReservationPageState extends State<ReservationPage> {
                     ),
                     child: Text(
                       data['notes'],
-                      style: GoogleFonts.inter(fontSize: 14), // Add font size here
+                      style: GoogleFonts.inter(fontSize: 14),
+                    ),
+                  ),
+                ],
+                if (data['status'] == 'cancelled') ...[
+                  SizedBox(height: 16),
+                  Text(
+                    'Cancellation Reason',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      data['cancellationReason'] ?? 'No reason provided',
+                      style: GoogleFonts.inter(fontSize: 14),
                     ),
                   ),
                 ],
@@ -655,8 +701,10 @@ class _ReservationPageState extends State<ReservationPage> {
 class ReservationSearchDelegate extends SearchDelegate {
   final String restaurantId;
   final RestaurantDataManager _restaurantDataManager = RestaurantDataManager();
+  final BuildContext parentContext;
+  final Function(Map<String, dynamic>) showReservationDetails;
 
-  ReservationSearchDelegate(this.restaurantId);
+  ReservationSearchDelegate(this.restaurantId, this.parentContext, this.showReservationDetails);
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -718,11 +766,11 @@ class ReservationSearchDelegate extends SearchDelegate {
             final data = reservations[index].data() as Map<String, dynamic>;
             return ListTile(
               title: Text(data['userEmail'] ?? 'N/A'),
-              subtitle: Text(DateFormat('MM/dd HH:mm').format((data['reservationDateTime'] as Timestamp).toDate())),
+              subtitle: Text(DateFormat('MM/dd h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
               trailing: Text(data['status']),
               onTap: () {
-                // You can implement an action when a search result is tapped
-                // For example, show reservation details
+                close(context, null);
+                showReservationDetails(data);
               },
             );
           },
@@ -731,3 +779,4 @@ class ReservationSearchDelegate extends SearchDelegate {
     );
   }
 }
+
