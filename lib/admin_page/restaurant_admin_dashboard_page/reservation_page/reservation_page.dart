@@ -384,20 +384,57 @@ class _ReservationPageState extends State<ReservationPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Confirm Deletion', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete this reservation?', style: GoogleFonts.poppins()),
+        title: Text(
+          'Confirm Deletion',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to delete this reservation? This action cannot be undone.',
+          style: GoogleFonts.poppins(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
+            ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              _deleteReservation(reservationId);
+              try {
+                await FirebaseFirestore.instance
+                    .collection('restaurants')
+                    .doc(widget.restaurantId)
+                    .collection('reservations')
+                    .doc(reservationId)
+                    .delete();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Reservation deleted successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error deleting reservation: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
-            child: Text('Delete'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -678,23 +715,90 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  void _updateReservationStatus(String reservationId, String newStatus) async {
-    try {
-      await _restaurantDataManager.updateReservationStatus(widget.restaurantId, reservationId, newStatus);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Reservation status updated successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update reservation status: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+  void _updateReservationStatus(String reservationId, String newStatus) {
+    String actionText = '';
+    switch (newStatus) {
+      case 'approved':
+        actionText = 'approve';
+        break;
+      case 'cancelled':
+        actionText = 'cancel';
+        break;
+      case 'completed':
+        actionText = 'mark as completed';
+        break;
+      default:
+        actionText = 'update';
     }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Confirm Action',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to $actionText this reservation?',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              try {
+                await _restaurantDataManager.updateReservationStatus(
+                    widget.restaurantId, reservationId, newStatus);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Reservation status updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to update reservation status: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _getActionColor(newStatus),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Confirm',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _getActionColor(String status) {
+  switch (status) {
+    case 'approved':
+      return Colors.green;
+    case 'cancelled':
+      return Colors.red;
+    case 'completed':
+      return Colors.blue;
+    default:
+      return Colors.grey;
   }
 }
 

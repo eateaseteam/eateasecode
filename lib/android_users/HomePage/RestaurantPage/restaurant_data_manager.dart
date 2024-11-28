@@ -108,6 +108,30 @@ class RestaurantDataManager {
         .get();
   }
 
+  Future<List<Map<String, dynamic>>> searchMenuItems(String query) async {
+    query = query.toLowerCase();
+    final QuerySnapshot snapshot = await _firestore.collection(collectionName).get();
+    List<Map<String, dynamic>> results = [];
+
+    for (var doc in snapshot.docs) {
+      final restaurant = doc.data() as Map<String, dynamic>;
+      final menuItemsSnapshot = await doc.reference.collection('menuItems').get();
+
+      for (var item in menuItemsSnapshot.docs) {
+        final menuItem = item.data();
+        if (menuItem['name'].toString().toLowerCase().contains(query)) {
+          results.add({
+            ...menuItem,
+            'restaurantId': doc.id,
+            'restaurantName': restaurant['name'],
+          });
+        }
+      }
+    }
+
+    return results;
+  }
+
   /// Cancels a reservation
   Future<void> cancelReservation(String restaurantId, String reservationId, String reason) async {
     await _firestore

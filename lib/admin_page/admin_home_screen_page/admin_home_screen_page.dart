@@ -49,21 +49,49 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     }
   }
 
-  // Log out the user and navigate to the Welcome screen
+  // Log out the user and navigate to the Login screen
   Future<void> _logout() async {
-    try {
-      await FirebaseAuth.instance.signOut(); // Sign out from Firebase Auth
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginAsScreen()), // Navigate to WelcomeScreen
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error logging out: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Logout', style: GoogleFonts.poppins()),
+          content: Text('Are you sure you want to log out?', style: GoogleFonts.poppins()),
+          actions: [
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+              onPressed: () {
+                Navigator.of(context).pop(false); // Cancel logout
+              },
+            ),
+            TextButton(
+              child: Text('Logout', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Confirm logout
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    // Proceed with logout if confirmed
+    if (shouldLogout == true) {
+      try {
+        await FirebaseAuth.instance.signOut(); // Sign out from Firebase Auth
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginAsScreen()), // Navigate to LoginAsScreen
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error logging out: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

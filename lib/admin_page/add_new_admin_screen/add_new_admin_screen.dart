@@ -12,6 +12,123 @@ class _AdminPanelState extends State<AdminPanel> {
   final TextEditingController _searchController = TextEditingController();
   bool _isPasswordVisible = false;
 
+  Future<bool> _showPasswordConfirmationDialog(BuildContext context) async {
+    final _passwordController = TextEditingController();
+    bool _isPasswordVisible = false;
+    bool? result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: Text(
+                'Confirm Your Password',
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo[900],
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Please enter your password to continue',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.indigo[800],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefixIcon: Icon(Icons.lock, color: Colors.indigo[600]),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.indigo[600],
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.indigo[600],
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      // Get current user
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        // Reauthenticate user
+                        final credential = EmailAuthProvider.credential(
+                          email: user.email!,
+                          password: _passwordController.text,
+                        );
+                        await user.reauthenticateWithCredential(credential);
+                        Navigator.of(context).pop(true);
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Invalid password'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      Navigator.of(context).pop(false);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo[600],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'Confirm',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+
   void _addNewAdmin(String username, String email, String password) async {
     final adminCollection = FirebaseFirestore.instance.collection('admins');
     final auth = FirebaseAuth.instance;
@@ -390,7 +507,6 @@ class _AdminPanelState extends State<AdminPanel> {
     );
   }
 
-
   void _showEditAdminDialog(BuildContext context, DocumentSnapshot doc) {
     final _formKey = GlobalKey<FormState>();
     String _username = doc['username'];
@@ -477,7 +593,6 @@ class _AdminPanelState extends State<AdminPanel> {
     );
   }
 
-
   void _showDeleteConfirmationDialog(BuildContext context, String docId) {
     showDialog(
       context: context,
@@ -532,5 +647,4 @@ class _AdminPanelState extends State<AdminPanel> {
       },
     );
   }
-
 }

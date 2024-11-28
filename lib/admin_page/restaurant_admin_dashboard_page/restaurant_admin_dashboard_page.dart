@@ -65,11 +65,48 @@ class _RestaurantAdminDashboardPageState
 
   // Function to log out the user
   Future<void> _logOut() async {
-    await FirebaseAuth.instance.signOut(); // Sign the user out
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginAsScreen()), // Navigate to the login screen
+    // Show confirmation dialog
+    final shouldLogOut = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Logout', style: GoogleFonts.poppins()),
+          content: Text('Are you sure you want to log out?', style: GoogleFonts.poppins()),
+          actions: [
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+              onPressed: () {
+                Navigator.of(context).pop(false); // User cancels logout
+              },
+            ),
+            TextButton(
+              child: Text('Logout', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop(true); // User confirms logout
+              },
+            ),
+          ],
+        );
+      },
     );
+
+    // Proceed with logout if confirmed
+    if (shouldLogOut == true) {
+      try {
+        await FirebaseAuth.instance.signOut(); // Sign the user out
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginAsScreen()), // Navigate to the login screen
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error logging out: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override

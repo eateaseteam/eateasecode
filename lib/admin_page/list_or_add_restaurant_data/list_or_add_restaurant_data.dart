@@ -322,6 +322,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           DataColumn(label: Text('Logo')),
           DataColumn(label: Text('Name')),
           DataColumn(label: Text('Email')),
+          DataColumn(label: Text('Phone')),
+          DataColumn(label: Text('Address')),
           DataColumn(label: Text('About')),
           DataColumn(label: Text('Actions')),
         ],
@@ -330,6 +332,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
             DataCell(_buildLogoCell(doc.id)),
             DataCell(Text(doc['name'], overflow: TextOverflow.ellipsis)),
             DataCell(Text(doc['email'], overflow: TextOverflow.ellipsis)),
+            DataCell(Text(doc['phoneNumber'] ?? 'N/A', overflow: TextOverflow.ellipsis)), // Phone number
+            DataCell(Text(doc['address'] ?? 'N/A', overflow: TextOverflow.ellipsis)), // Address
             DataCell(
               Container(
                 width: 200,
@@ -357,7 +361,14 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           child: ListTile(
             leading: _buildLogoCell(doc.id),
             title: Text(doc['name'], style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(doc['email']),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(doc['email']),
+                Text(doc['phoneNumber'] ?? 'N/A'), // Phone number
+                Text(doc['address'] ?? 'N/A'), // Address
+              ],
+            ),
             trailing: _buildActionButtons(doc),
           ),
         );

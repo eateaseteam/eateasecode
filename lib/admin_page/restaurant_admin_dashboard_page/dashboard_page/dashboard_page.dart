@@ -61,30 +61,30 @@ class DashboardPage extends StatelessWidget {
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 3,
       children: [
-        _buildStatusCard(
-          'Complete\nReservation',
+        _buildSmallStatusCard(
+          'Completed',
           counts['completed'].toString(),
           Colors.blue[600]!,
           Icons.check_circle_outline,
         ),
-        _buildStatusCard(
-          'Pending\nReservation',
+        _buildSmallStatusCard(
+          'Pending',
           counts['pending'].toString(),
           Colors.orange[600]!,
           Icons.pending_outlined,
         ),
-        _buildStatusCard(
-          'Approved\nReservation',
+        _buildSmallStatusCard(
+          'Approved',
           counts['approved'].toString(),
           Colors.green[600]!,
           Icons.thumb_up_outlined,
         ),
-        _buildStatusCard(
-          'Cancelled\nReservation',
+        _buildSmallStatusCard(
+          'Cancelled',
           counts['cancelled'].toString(),
           Colors.red[600]!,
           Icons.cancel_outlined,
@@ -93,42 +93,45 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCard(String title, String value, Color color, IconData icon) {
+  Widget _buildSmallStatusCard(String title, String value, Color color, IconData icon) {
     return Container(
-      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: Offset(0, 3),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: Row(
         children: [
-          Icon(icon, color: color, size: 32),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 value,
                 style: GoogleFonts.inter(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                   color: Colors.grey[800],
                 ),
               ),
-              SizedBox(height: 4),
               Text(
                 title,
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 12,
                   color: Colors.grey[600],
                 ),
               ),
@@ -138,6 +141,7 @@ class DashboardPage extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildOrdersByTypeChart(List<DocumentSnapshot> reservations) {
     Map<String, double> typeData = _getOrdersByType(reservations);

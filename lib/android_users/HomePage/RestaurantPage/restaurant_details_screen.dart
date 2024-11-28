@@ -76,7 +76,19 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         };
       }
     });
+
+    // Add toast notification for cart addition
+    Fluttertoast.showToast(
+      msg: '${item['name']} added to cart',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
+
 
   void _removeFromCart(String itemName) {
     setState(() {
@@ -88,12 +100,34 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         }
       }
     });
+
+    // Add toast notification for cart removal
+    Fluttertoast.showToast(
+      msg: '$itemName removed from cart', // Use itemName directly
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.orange,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   void _deleteFromCart(String itemName) {
     setState(() {
       _cartItems.remove(itemName);
     });
+
+    // Add toast notification for cart deletion
+    Fluttertoast.showToast(
+      msg: '$itemName deleted from cart', // Use itemName directly
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   double _calculateTotalPrice() {
@@ -200,23 +234,30 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         'userEmail': user.email,
         'restaurantName': _restaurant?['name'] ?? '',
         'logoUrl': _restaurant?['logoUrl'] ?? '',
-        'reservationDateTime': DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day, _selectedTime!.hour, _selectedTime!.minute),
+        'reservationDateTime': DateTime(
+          _selectedDate!.year,
+          _selectedDate!.month,
+          _selectedDate!.day,
+          _selectedTime!.hour,
+          _selectedTime!.minute,
+        ),
         'status': 'pending',
         'items': _cartItems.values.toList(),
         'guestCount': _guestCount,
         'totalPrice': _calculateTotalPrice(),
         'paymentMethod': _paymentMethod,
         'referenceNumber': _referenceNumber,
-        'orderNotes': _orderNotes, // Add order notes to reservation data
+        'orderNotes': _orderNotes,
       };
 
       await _restaurantDataManager.addReservation(widget.restaurantId, reservationData);
 
+      // Show success toast
       Fluttertoast.showToast(
-        msg: 'Reservation successful!',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
+        msg: 'Booking confirmed! Your reservation has been placed.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 2,
         backgroundColor: Colors.green,
         textColor: Colors.white,
         fontSize: 16.0,
@@ -229,17 +270,19 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         _selectedDate = null;
         _selectedTime = null;
         _cartItems.clear();
-        _orderNotes = ''; // Clear order notes after successful booking
+        _orderNotes = '';
       });
 
       Navigator.pop(context);
     } catch (e) {
       print('Error booking table: $e');
+
+      // Show error toast
       Fluttertoast.showToast(
         msg: 'Failed to make reservation. Please try again.',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 2,
         backgroundColor: Colors.red,
         textColor: Colors.white,
         fontSize: 16.0,

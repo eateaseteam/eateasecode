@@ -17,6 +17,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final RestaurantDataManager _restaurantDataManager = RestaurantDataManager();
   List<Map<String, dynamic>> _popularFoods = [];
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -24,10 +27,32 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadPopularFoods();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadPopularFoods() async {
     final foods = await _restaurantDataManager.getRandomPopularFoods(10);
     setState(() {
       _popularFoods = foods;
+    });
+  }
+
+  Future<void> _searchMenuItems(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _isSearching = false;
+        _searchResults = [];
+      });
+      return;
+    }
+
+    final results = await _restaurantDataManager.searchMenuItems(query);
+    setState(() {
+      _isSearching = true;
+      _searchResults = results;
     });
   }
 
@@ -62,8 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildPopularFoods(),
-                          _buildRestaurants(),
+                          if (_isSearching) _buildSearchResults(),
+                          if (!_isSearching) ...[
+                            _buildPopularFoods(),
+                            _buildRestaurants(),
+                          ],
                         ],
                       ),
                     ),
@@ -143,14 +171,114 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         child: TextField(
+          controller: _searchController,
           decoration: InputDecoration(
-            hintText: 'Search',
+            hintText: 'Search menu items',
             hintStyle: GoogleFonts.poppins(color: Colors.grey[500]),
             icon: Icon(Icons.search, color: Colors.grey[500]),
+            suffixIcon: _isSearching
+                ? IconButton(
+              icon: Icon(Icons.close, color: Colors.grey[500]),
+              onPressed: () {
+                _searchController.clear();
+                _searchMenuItems('');
+              },
+            )
+                : null,
             border: InputBorder.none,
           ),
+          onChanged: _searchMenuItems,
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchResults() {
+    if (_searchResults.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Text(
+            'No menu items found',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Search Results',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: _searchResults.length,
+          itemBuilder: (context, index) {
+            final item = _searchResults[index];
+            return Card(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: ListTile(
+                contentPadding: EdgeInsets.all(8),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    item['image'],
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey[300],
+                        child: Icon(Icons.restaurant, color: Colors.grey[500]),
+                      );
+                    },
+                  ),
+                ),
+                title: Text(
+                  item['name'],
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                ),
+                subtitle: Text(
+                  item['restaurantName'],
+                  style: GoogleFonts.poppins(color: Colors.grey[600]),
+                ),
+                trailing: Text(
+                  'PHP ${item['price'].toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RestaurantDetailsScreen(
+                        restaurantId: item['restaurantId'],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -206,6 +334,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 100,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 100,
+                                color: Colors.grey[300],
+                                child: Icon(Icons.restaurant, color: Colors.grey[500]),
+                              );
+                            },
                           ),
                         ),
                         Padding(
@@ -322,6 +457,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 100,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 100,
+                                    color: Colors.grey[300],
+                                    child: Icon(Icons.restaurant, color: Colors.grey[500]),
+                                  );
+                                },
                               ),
                             ),
                             Padding(
@@ -358,6 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
+            SizedBox(height: 20), // Add some bottom padding
           ],
         );
       },
