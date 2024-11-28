@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../welcome_screen/log_in_as_screen.dart';
 import 'dashboard_page/dashboard_page.dart';
 import 'menu_page/menu_page.dart';
-import 'orders_page/orders_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -140,7 +139,6 @@ class _RestaurantAdminDashboardPageState
                   _buildListTile('Dashboard', Icons.dashboard, color: Colors.orange),
                   _buildListTile('Menu', Icons.menu, color: Colors.orange),
                   _buildListTile('Reservation', Icons.calendar_today, color: Colors.orange),
-                  _buildListTile('Orders', Icons.shopping_cart, color: Colors.orange),
                   _buildListTile('History', Icons.history, color: Colors.orange),
                   // Add Logout tile
                   _buildListTile('Logout', Icons.logout, color: Colors.red, onTap: _logOut),
@@ -149,15 +147,13 @@ class _RestaurantAdminDashboardPageState
             ),
           Expanded(
             child: _currentPage == 'Dashboard'
-                ? DashboardPage()
+                ? DashboardPage(restaurantId: widget.userId)
                 : _currentPage == 'Menu'
                 ? MenuPage(userId: widget.userId) // This will display the MenuPage
                 : _currentPage == 'Reservation'
                 ? ReservationPage(restaurantId: widget.userId) // Pass the restaurantId here
-                : _currentPage == 'Orders'
-                ? OrdersPage()
                 : _currentPage == 'History'
-                ? ReservationHistoryPage()
+                ? ReservationHistoryPage(restaurantId: widget.userId)
                 : Center(child: Text('Content for $_currentPage')),
           ),
         ],
