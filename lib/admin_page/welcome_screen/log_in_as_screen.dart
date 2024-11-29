@@ -24,7 +24,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
         fontSize: 16.0,
       );
       // Navigate to AdminLoginPage
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => AdminLoginPage()),
       );
@@ -38,7 +38,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
         textColor: Colors.white,
         fontSize: 16.0,
       );
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => RestaurantAdminLoginPage()),
       );

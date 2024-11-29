@@ -53,91 +53,6 @@ class _CustomerListPageState extends State<CustomerListPage> {
     );
   }
 
-  void _requestPasswordReset(String email) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Send Password Reset Link', style: GoogleFonts.inter()),
-          content: Text('Send a password reset link to $email?', style: GoogleFonts.inter()),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey[600])),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await _auth.sendPasswordResetEmail(email: email);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password reset link sent to $email.')));
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-                }
-              },
-              style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.blue[600]),
-              child: Text('Send Link', style: GoogleFonts.inter()),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _editCustomer(Map<String, dynamic> customer) {
-    final TextEditingController _firstNameController = TextEditingController(text: customer['firstName']);
-    final TextEditingController _lastNameController = TextEditingController(text: customer['lastName']);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Edit Customer', style: GoogleFonts.inter()),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _firstNameController,
-                decoration: InputDecoration(labelText: 'First Name', border: OutlineInputBorder()),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _lastNameController,
-                decoration: InputDecoration(labelText: 'Last Name', border: OutlineInputBorder()),
-              ),
-              SizedBox(height: 16),
-              Text('Email: ${customer['email']}', style: TextStyle(color: Colors.grey)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey[600])),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                String updatedFirstName = _firstNameController.text;
-                String updatedLastName = _lastNameController.text;
-                String updatedFullName = '$updatedFirstName $updatedLastName';
-
-                _customersCollection.doc(customer['id']).update({
-                  'firstName': updatedFirstName,
-                  'lastName': updatedLastName,
-                  'fullName': updatedFullName,
-                });
-
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer updated successfully.')));
-              },
-              style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.green[600]),
-              child: Text('Update', style: GoogleFonts.inter()),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -271,25 +186,13 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                       ),
                                     ),
                                     DataCell(
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit, color: Colors.blue[600]),
-                                            onPressed: () => _editCustomer(customer),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.delete, color: Colors.red[600]),
-                                            onPressed: () => _deleteCustomer(
-                                              customer['id'],
-                                              customer['firstName'],
-                                              customer['lastName'],
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.lock_reset, color: Colors.green[600]),
-                                            onPressed: () => _requestPasswordReset(customer['email']),
-                                          ),
-                                        ],
+                                      IconButton(
+                                        icon: Icon(Icons.delete, color: Colors.red[600]),
+                                        onPressed: () => _deleteCustomer(
+                                          customer['id'],
+                                          customer['firstName'],
+                                          customer['lastName'],
+                                        ),
                                       ),
                                     ),
                                   ],

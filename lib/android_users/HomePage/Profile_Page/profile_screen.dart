@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../../../SignIn_Page/sign_in_screen.dart';
 import 'about_us.dart';
 import 'faqs.dart';
 import 'privacy_and_policy.dart';
@@ -34,6 +35,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _forgotPassword(BuildContext context, String currentUserEmail) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Reset Password',
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'We will send a password reset link to your registered email.',
+                style: GoogleFonts.poppins(fontSize: 16),
+              ),
+              SizedBox(height: 16),
+              Text(
+                currentUserEmail, // Display the current user's email
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await FirebaseAuth.instance.sendPasswordResetEmail(
+                    email: currentUserEmail.trim(), // Use the passed email
+                  );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Password reset email sent. Check your inbox.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Send Reset Link',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   Future<void> _logout(BuildContext context) async {
     showDialog(
       context: context,
@@ -43,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Container(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -56,13 +140,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Are you sure you want to log out?',
                   style: GoogleFonts.poppins(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -75,12 +159,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        Navigator.pop(context);
+                        Navigator.pop(context); // Close the dialog
                         try {
                           await FirebaseAuth.instance.signOut();
-                          SystemNavigator.pop();
+                          // Navigate to the SignInScreen
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => SignInScreen()),
+                                (route) => false, // Remove all previous routes
+                          );
                         } catch (e) {
                           print('Logout failed: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Logout failed. Please try again.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -103,6 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
+
 
   Future<void> _updateProfileImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -153,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 radius: 100,
                 backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
                     ? NetworkImage(profileImageUrl)
-                    : AssetImage('lib/assets/app_images/official_logo.png') as ImageProvider,
+                    : AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
               ),
             ],
           ),
@@ -277,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.payment,
                     title: 'Payment',
                     onTap: () {
-                      _showGcashDialog(context); // Show GCash dialog
+                      _showGcashDialog(context);
                     },
                   ),
                   SizedBox(height: 16),
@@ -312,6 +408,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         MaterialPageRoute(builder: (context) => AboutUsScreen()),
                       );
                     },
+                  ),
+                  SizedBox(height: 16),
+                  _buildProfileItem(
+                    icon: Icons.lock_reset,
+                    title: 'Reset Password',
+                    onTap: () => _forgotPassword(context, widget.email),
                   ),
                 ],
                 if (!_isEditing) ...[
@@ -431,7 +533,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   radius: 40,
                   backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
                       ? NetworkImage(profileImageUrl!)
-                      : AssetImage('lib/assets/app_images/official_logo.png') as ImageProvider,
+                      : AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
                 ),
               ),
               Positioned(

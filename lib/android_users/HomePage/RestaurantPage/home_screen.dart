@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(width: 16),
           Image.asset(
-            'lib/assets/app_images/official_logo.png',
+            'lib/assets/app_images/updated_official_logo.png',
             height: 40,
           ),
           IconButton(

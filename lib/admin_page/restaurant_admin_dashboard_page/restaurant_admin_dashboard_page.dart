@@ -169,7 +169,7 @@ class _RestaurantAdminDashboardPageState
                             ? CircularProgressIndicator()
                             : _restaurantLogoUrl.isNotEmpty
                             ? Image.network(_restaurantLogoUrl, width: 150)
-                            : Image.asset('lib/assets/app_images/official_logo.png', width: 150),
+                            : Image.asset('lib/assets/app_images/updated_official_logo.png', width: 150),
                       ],
                     ),
                   ),

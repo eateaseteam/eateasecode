@@ -184,7 +184,7 @@ class _SplashState extends State<Splash> {
             width: 300,
             height: 300,
             child: Image.asset(
-              'lib/assets/app_images/official_logo.png',
+              'lib/assets/app_images/updated_official_logo.png',
               fit: BoxFit.contain, // Adjust as needed for your layout
             ),
           ),

@@ -113,7 +113,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          Navigator.pushReplacement(
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => SignUpScreen()),
@@ -204,11 +204,12 @@ class _SignInScreenState extends State<SignInScreen> {
           password: password,
         );
         _showToast('Login successful', Colors.green);
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => HomeScreenContainer(email: email),
           ),
+              (route) => false, // Remove all previous routes
         );
       } on FirebaseAuthException catch (e) {
         _showToast(e.message ?? 'Error occurred', Colors.red);

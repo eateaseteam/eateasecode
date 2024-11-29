@@ -84,7 +84,7 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Image.asset(
-                'lib/assets/app_images/official_logo.png',
+                'lib/assets/app_images/updated_official_logo.png',
                 width: 120,
                 height: 120,
               ),

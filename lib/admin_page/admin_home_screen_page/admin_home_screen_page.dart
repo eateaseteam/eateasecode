@@ -147,7 +147,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                     decoration: BoxDecoration(color: Colors.white),
                     child: Row(
                       children: [
-                        Image.asset('lib/assets/app_images/official_logo.png', width: 150),
+                        Image.asset('lib/assets/app_images/updated_official_logo.png', width: 150),
                       ],
                     ),
                   ),

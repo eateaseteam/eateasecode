@@ -55,6 +55,10 @@ dependencies:
   universal_html: ^2.2.4
   image_picker_web: ^4.0.0
   timeago: ^3.2.2
+  flutter_secure_storage: ^9.2.2
+  flutter_launcher_icons: ^0.14.1
+  cached_network_image: ^3.4.0
+
 
 dev_dependencies:
   flutter_test:
@@ -80,3 +84,20 @@ flutter:
   - lib/assets/app_images/
   - lib/assets/food_images/
   - lib/assets/restaurants_logo/
+
+flutter_icons:
+  android: "launcher_icon"
+  image_path: "lib/assets/app_images/updated_official_logo.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "#FFFFFF" # White background
+  adaptive_icon_foreground: "lib/assets/app_images/updated_official_logo.png" # Foreground logo
+  windows:
+    generate: true
+    image_path: "lib/assets/app_images/updated_official_logo.png"
+    icon_size: 48
+    background_color: "#FFFFFF"
+  web:
+    generate: true
+    image_path: "lib/assets/app_images/updated_official_logo.png"
+    background_color: "#FFFFFF" # Background color of the icon
+    theme_color: "#000000" # Theme color for the web app
