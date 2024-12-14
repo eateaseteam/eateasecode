@@ -47,9 +47,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         await _logAdminLogin(userId, email);
 
         // Navigate to the Admin Dashboard
-        Navigator.pushReplacement(
-          context,
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => AdminHomeScreenPage(userId: userId)),
+              (route) => false, // Remove all previous routes
         );
       } else {
         _showErrorSnackbar('You are not authorized to access this page.');
@@ -58,6 +58,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       _showErrorSnackbar('Login failed: ${e.toString()}');
     }
   }
+
 
   Future<void> _logAdminLogin(String userId, String email) async {
     try {

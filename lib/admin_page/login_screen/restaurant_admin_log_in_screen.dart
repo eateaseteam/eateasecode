@@ -55,13 +55,13 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
         });
 
         // Restaurant found, navigate to the Restaurant Admin Dashboard
-        Navigator.pushReplacement(
-          context,
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => RestaurantAdminDashboardPage(
               userId: userCredential.user!.uid,
             ),
           ),
+              (route) => false, // This removes all previous routes
         );
       } else {
         // No restaurant found for this user (UID mismatch or no restaurant)
@@ -82,6 +82,7 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
