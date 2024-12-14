@@ -1,7 +1,10 @@
+import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/recent_activity_page/recent_activity_page.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reservation_history_page/reservation_history_page.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reservation_page/reservation_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import '../recent_activity_screen/recent_activity_screen.dart';
 import '../welcome_screen/log_in_as_screen.dart';
 import 'dashboard_page/dashboard_page.dart';
 import 'menu_page/menu_page.dart';
@@ -9,7 +12,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class RestaurantAdminDashboardPage extends StatefulWidget {
-  final String userId; // Accept the userId passed from the login screen
+  final String userId;
 
   RestaurantAdminDashboardPage({required this.userId});
 
@@ -34,38 +37,32 @@ class _RestaurantAdminDashboardPageState
 
   Future<void> _fetchRestaurantDetails() async {
     try {
-      // Fetch restaurant data using UID as the document ID
       DocumentSnapshot restaurantDoc = await FirebaseFirestore.instance
           .collection('restaurants')
-          .doc(widget.userId) // Use the userId to fetch the restaurant document
+          .doc(widget.userId)
           .get();
 
       if (restaurantDoc.exists) {
-        // Successfully found the restaurant
         setState(() {
-          _restaurantName = restaurantDoc['name'] ?? 'Restaurant Name'; // Fetch restaurant name
-          _restaurantLogoUrl = restaurantDoc['logoUrl'] ?? ''; // Fetch logoUrl if available
-          _isLoading = false; // Update loading state to false
+          _restaurantName = restaurantDoc['name'] ?? 'Restaurant Name';
+          _restaurantLogoUrl = restaurantDoc['logoUrl'] ?? '';
+          _isLoading = false;
         });
       } else {
-        // Handle case where no restaurant is found with this UID
         setState(() {
           _isLoading = false;
-          _restaurantName = 'Restaurant not found'; // Provide feedback if not found
+          _restaurantName = 'Restaurant not found';
         });
       }
     } catch (e) {
-      // Handle any errors during data fetching
       setState(() {
         _isLoading = false;
-        _restaurantName = 'Error fetching data'; // Provide error feedback
+        _restaurantName = 'Error fetching data';
       });
     }
   }
 
-  // Function to log out the user
   Future<void> _logOut() async {
-    // Show confirmation dialog
     final shouldLogOut = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -76,13 +73,13 @@ class _RestaurantAdminDashboardPageState
             TextButton(
               child: Text('Cancel', style: TextStyle(color: Colors.grey)),
               onPressed: () {
-                Navigator.of(context).pop(false); // User cancels logout
+                Navigator.of(context).pop(false);
               },
             ),
             TextButton(
               child: Text('Logout', style: TextStyle(color: Colors.red)),
               onPressed: () {
-                Navigator.of(context).pop(true); // User confirms logout
+                Navigator.of(context).pop(true);
               },
             ),
           ],
@@ -90,13 +87,32 @@ class _RestaurantAdminDashboardPageState
       },
     );
 
-    // Proceed with logout if confirmed
     if (shouldLogOut == true) {
       try {
-        await FirebaseAuth.instance.signOut(); // Sign the user out
+        // Get the current user's email
+        final user = FirebaseAuth.instance.currentUser;
+        final email = user?.email ?? 'Unknown User';
+
+        // Log the logout activity in Firestore under the specific restaurant
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(widget.userId)
+            .collection('logout_logs') // Use a sub-collection for logout logs
+            .add({
+          'userId': widget.userId,
+          'email': email, // Record the email of the user who logged out
+          'action': 'Logout',
+          'timestamp': FieldValue.serverTimestamp(),
+          'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a').format(DateTime.now()),
+        });
+
+        // Sign out from Firebase Auth
+        await FirebaseAuth.instance.signOut();
+
+        // Navigate to login screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => LoginAsScreen()), // Navigate to the login screen
+          MaterialPageRoute(builder: (context) => LoginAsScreen()),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -169,16 +185,23 @@ class _RestaurantAdminDashboardPageState
                             ? CircularProgressIndicator()
                             : _restaurantLogoUrl.isNotEmpty
                             ? Image.network(_restaurantLogoUrl, width: 150)
-                            : Image.asset('lib/assets/app_images/updated_official_logo.png', width: 150),
+                            : Image.asset(
+                          'lib/assets/app_images/updated_official_logo.png',
+                          width: 150,
+                        ),
                       ],
                     ),
                   ),
-                  _buildListTile('Dashboard', Icons.dashboard, color: Colors.orange),
+                  _buildListTile('Dashboard', Icons.dashboard,
+                      color: Colors.orange),
                   _buildListTile('Menu', Icons.menu, color: Colors.orange),
-                  _buildListTile('Reservation', Icons.calendar_today, color: Colors.orange),
-                  _buildListTile('History', Icons.history, color: Colors.orange),
-                  // Add Logout tile
-                  _buildListTile('Logout', Icons.logout, color: Colors.red, onTap: _logOut),
+                  _buildListTile('Reservation', Icons.calendar_today,
+                      color: Colors.orange),
+                  _buildListTile('Reservation History', Icons.history, color: Colors.orange),
+                  _buildListTile('Recent Activity', Icons.timeline,
+                      color: Colors.orange),
+                  _buildListTile('Logout', Icons.logout,
+                      color: Colors.red, onTap: _logOut),
                 ],
               ),
             ),
@@ -186,11 +209,13 @@ class _RestaurantAdminDashboardPageState
             child: _currentPage == 'Dashboard'
                 ? DashboardPage(restaurantId: widget.userId)
                 : _currentPage == 'Menu'
-                ? MenuPage(userId: widget.userId) // This will display the MenuPage
+                ? MenuPage(userId: widget.userId)
                 : _currentPage == 'Reservation'
-                ? ReservationPage(restaurantId: widget.userId) // Pass the restaurantId here
-                : _currentPage == 'History'
+                ? ReservationPage(restaurantId: widget.userId)
+                : _currentPage == 'Reservation History'
                 ? ReservationHistoryPage(restaurantId: widget.userId)
+                : _currentPage == 'Recent Activity'
+                ? RecentActivityPage(restaurantId: widget.userId)
                 : Center(child: Text('Content for $_currentPage')),
           ),
         ],
@@ -210,4 +235,3 @@ class _RestaurantAdminDashboardPageState
     );
   }
 }
-

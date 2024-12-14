@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart'; // Add this for date formatting
 import '../admin_home_screen_page/admin_home_screen_page.dart';
 
 class AdminLoginPage extends StatefulWidget {
@@ -25,21 +26,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
-    // Static account credentials
-    const String staticAdminEmail = "admin@static.com";
-    const String staticAdminPassword = "StaticAdmin123";
-
     try {
-      // Check for static admin credentials
-      if (email == staticAdminEmail && password == staticAdminPassword) {
-        // Navigate directly to AdminHomeScreenPage as a static admin
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AdminHomeScreenPage(userId: "staticAdmin")),
-        );
-        return;
-      }
-
       // Authenticate the user using Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
@@ -56,31 +43,49 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           .get();
 
       if (adminDoc.exists) {
-        // Navigate to the Admin Dashboard with user ID
+        // Log the admin login
+        await _logAdminLogin(userId, email);
+
+        // Navigate to the Admin Dashboard
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => AdminHomeScreenPage(userId: userId)),
         );
       } else {
-        // Show error if the user is not an admin
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('You are not authorized to access this page.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorSnackbar('You are not authorized to access this page.');
       }
     } catch (e) {
-      // Handle login errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login failed: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorSnackbar('Login failed: ${e.toString()}');
     }
   }
 
+  Future<void> _logAdminLogin(String userId, String email) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(userId) // Use admin ID
+          .collection('login_logs') // Create a separate collection for logs
+          .add({
+        'userId': userId,
+        'email': email, // Record the email of the user who logged in
+        'action': 'Login',
+        'timestamp': FieldValue.serverTimestamp(),
+        'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a')
+            .format(DateTime.now()),
+      });
+    } catch (e) {
+      print('Error logging admin login: $e');
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,70 +115,28 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40.0),
-              TextField(
+              _buildTextField(
                 controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Email Address',
-                  labelStyle: GoogleFonts.inter(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
-                  ),
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[600]),
-                  contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-                ),
+                label: 'Email Address',
+                isObscure: false,
+                prefixIcon: Icons.email_outlined,
               ),
               const SizedBox(height: 16.0),
-              TextField(
+              _buildTextField(
                 controller: _passwordController,
-                obscureText: _isObscurePassword,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: GoogleFonts.inter(
+                label: 'Password',
+                isObscure: _isObscurePassword,
+                prefixIcon: Icons.lock_outline,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isObscurePassword ? Icons.visibility_off : Icons.visibility,
                     color: Colors.grey[600],
-                    fontSize: 14,
                   ),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
-                  ),
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[600]),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isObscurePassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey[600],
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isObscurePassword = !_isObscurePassword;
-                      });
-                    },
-                  ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+                  onPressed: () {
+                    setState(() {
+                      _isObscurePassword = !_isObscurePassword;
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 32.0),
@@ -199,6 +162,43 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required bool isObscure,
+    required IconData prefixIcon,
+    IconButton? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isObscure,
+      style: GoogleFonts.inter(
+        fontSize: 16,
+        color: Colors.black87,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.inter(
+          color: Colors.grey[600],
+          fontSize: 14,
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
+        ),
+        prefixIcon: Icon(prefixIcon, color: Colors.grey[600]),
+        suffixIcon: suffixIcon,
+        contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
       ),
     );
   }

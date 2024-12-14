@@ -15,6 +15,17 @@ class RestaurantDataManager {
         .snapshots();
   }
 
+  /// Fetches reservations for a specific restaurant with a specific status
+  Stream<QuerySnapshot> getReservationsStreamByStatus(String restaurantId, String status) {
+    return _firestore
+        .collection(collectionName)
+        .doc(restaurantId)
+        .collection('reservations')
+        .where('status', isEqualTo: status)
+        .orderBy('bookingTimestamp', descending: true)
+        .snapshots();
+  }
+
   /// Updates the status of a reservation
   Future<void> updateReservationStatus(String restaurantId, String reservationId, String newStatus) async {
     await _firestore
@@ -145,3 +156,4 @@ class RestaurantDataManager {
     });
   }
 }
+

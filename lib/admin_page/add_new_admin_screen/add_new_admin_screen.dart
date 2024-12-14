@@ -2,386 +2,102 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class AdminPanel extends StatefulWidget {
+  const AdminPanel({Key? key}) : super(key: key);
+
   @override
   _AdminPanelState createState() => _AdminPanelState();
 }
 
 class _AdminPanelState extends State<AdminPanel> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isPasswordVisible = false;
+  late Stream<QuerySnapshot> _adminsStream;
 
-  Future<bool> _showPasswordConfirmationDialog(BuildContext context) async {
-    final _passwordController = TextEditingController();
-    bool _isPasswordVisible = false;
-    bool? result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing by tapping outside
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: Text(
-                'Confirm Your Password',
-                style: GoogleFonts.poppins(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.indigo[900],
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Please enter your password to continue',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.indigo[800],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      prefixIcon: Icon(Icons.lock, color: Colors.indigo[600]),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          color: Colors.indigo[600],
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(
-                    'Cancel',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.indigo[600],
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      // Get current user
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        // Reauthenticate user
-                        final credential = EmailAuthProvider.credential(
-                          email: user.email!,
-                          password: _passwordController.text,
-                        );
-                        await user.reauthenticateWithCredential(credential);
-                        Navigator.of(context).pop(true);
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Invalid password'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      Navigator.of(context).pop(false);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo[600],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    'Confirm',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    return result ?? false;
+  @override
+  void initState() {
+    super.initState();
+    _adminsStream = FirebaseFirestore.instance
+        .collection('admins')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
   }
 
-
-  void _addNewAdmin(String username, String email, String password) async {
-    final adminCollection = FirebaseFirestore.instance.collection('admins');
-    final auth = FirebaseAuth.instance;
-
+  Future<void> _logActivity(String action, String details) async {
     try {
-      // Create the new admin in Firebase Authentication
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+      String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'Unknown';
+      await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(currentUserId)
+          .collection('admin_logs')
+          .add({
+        'action': action,
+        'details': details,
+        'timestamp': FieldValue.serverTimestamp(),
+        'performedBy': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+      });
+    } catch (e) {
+      print('Error logging activity: $e');
+    }
+  }
+
+  Future<void> _addNewAdmin(String username, String email, String password) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Get the authenticated user
       User? user = userCredential.user;
       if (user != null) {
-        // Optional: You can set additional fields like 'uid' in Firestore if needed
-        await adminCollection.doc(user.uid).set({
-          'uid': user.uid, // Store the Firebase Auth UID
+        await FirebaseFirestore.instance.collection('admins').doc(user.uid).set({
+          'uid': user.uid,
           'username': username,
           'email': email,
-          'createdAt': Timestamp.now(),
-        }, SetOptions(merge: true));
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Admin added successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        await _logActivity('Add Admin', 'Added new admin: $username ($email)');
+        _showSnackBar('Admin added successfully!', Colors.green);
       }
     } catch (e) {
-      // Handle errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to add admin: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Failed to add admin: $e', Colors.red);
     }
   }
 
-  void _editAdmin(String docId, String username, String email) async {
-    final adminCollection = FirebaseFirestore.instance.collection('admins');
+  Future<void> _editAdmin(String docId, String username, String email) async {
     try {
-      await adminCollection.doc(docId).update({
+      await FirebaseFirestore.instance.collection('admins').doc(docId).update({
         'username': username,
         'email': email,
+        'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Admin updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await _logActivity('Edit Admin', 'Updated admin: $username ($email)');
+      _showSnackBar('Admin updated successfully!', Colors.green);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update admin: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Failed to update admin: $e', Colors.red);
     }
   }
 
-  // Function to send password reset email
-  void _sendPasswordResetEmail(String email) async {
+  Future<void> _sendPasswordResetEmail(String email) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Password reset email sent!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await _logActivity('Password Reset', 'Sent password reset email to: $email');
+      _showSnackBar('Password reset email sent!', Colors.green);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send reset email: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Failed to send reset email: $e', Colors.red);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.all(24.0),
-        child: Card(
-          elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Admin Data',
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo[900],
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddAdminDialog(context),
-                      icon: Icon(Icons.add, color: Colors.white),  // Icon color set to white
-                      label: Text(
-                        'Add New Admin',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,  // Text color set to white
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo[600],  // Button background color
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    Spacer(),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search admins...',
-                          prefixIcon: Icon(Icons.search, color: Colors.indigo[400]),
-                          filled: true,
-                          fillColor: Colors.indigo[50],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: EdgeInsets.symmetric(vertical: 15),
-                        ),
-                        onChanged: (value) {
-                          setState(() {}); // Trigger a rebuild to filter results
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 30),
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('admins')
-                        .orderBy('createdAt', descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(child: Text('No admins yet.'));
-                      }
-                      final admins = snapshot.data!.docs;
-                      final filteredAdmins = admins.where((doc) {
-                        final query = _searchController.text.toLowerCase();
-                        final username = doc['username'].toLowerCase();
-                        final email = doc['email'].toLowerCase();
-                        return query.isEmpty ||
-                            username.contains(query) ||
-                            email.contains(query);
-                      }).toList();
-
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(
-                            Colors.indigo[100],
-                          ),
-                          headingTextStyle: GoogleFonts.poppins(
-                            color: Colors.indigo[900],
-                            fontWeight: FontWeight.w600,
-                          ),
-                          dataTextStyle: GoogleFonts.poppins(
-                            color: Colors.indigo[800],
-                          ),
-                          columns: [
-                            DataColumn(label: Text('Username')),
-                            DataColumn(label: Text('Email')),
-                            DataColumn(label: Text('Actions')),  // Removed Password column
-                          ],
-                          rows: filteredAdmins.map((doc) {
-                            return DataRow(
-                              cells: [
-                                DataCell(Text(doc['username'])),
-                                DataCell(Text(doc['email'])),
-                                DataCell(
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.indigo[600]),
-                                        onPressed: () {
-                                          _showEditAdminDialog(context, doc);
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red[600]),
-                                        onPressed: () {
-                                          _showDeleteConfirmationDialog(context, doc.id);
-                                        },
-                                      ),
-                                      // Forgot Password Button
-                                      IconButton(
-                                        icon: Icon(Icons.lock_reset, color: Colors.blue),
-                                        onPressed: () {
-                                          _sendPasswordResetEmail(doc['email']);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _deleteAdmin(String docId) async {
+  Future<void> _deleteAdmin(String docId, String email) async {
     try {
       await FirebaseFirestore.instance.collection('admins').doc(docId).delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Admin deleted successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await _logActivity('Delete Admin', 'Deleted admin: $email');
+      _showSnackBar('Admin deleted successfully!', Colors.green);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to delete admin: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Failed to delete admin: $e', Colors.red);
     }
   }
 
@@ -397,105 +113,43 @@ class _AdminPanelState extends State<AdminPanel> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text(
-              'Add New Admin',
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
-              ),
-            ),
-            content: Container(
+            title: Text('Add New Admin', style: _dialogTitleStyle),
+            content: SizedBox(
               width: 400,
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Username Field
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: Icon(Icons.person, color: Colors.indigo[600]),
-                      ),
-                      validator: (value) =>
-                      value!.isEmpty ? 'Please enter a username' : null,
+                    _buildTextField(
+                      label: 'Username',
                       onSaved: (value) => _username = value!,
+                      validator: (value) => value!.isEmpty ? 'Please enter a username' : null,
                     ),
-                    SizedBox(height: 20),
-
-                    // Editable Email Field
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: Icon(Icons.email, color: Colors.indigo[600]),
-                      ),
-                      validator: (value) => value!.isEmpty ||
-                          !RegExp(r'\S+@\S+\.\S+').hasMatch(value)
-                          ? 'Please enter a valid email address'
-                          : null,
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      label: 'Email',
                       onSaved: (value) => _email = value!,
+                      validator: (value) => value!.isEmpty || !RegExp(r'\S+@\S+\.\S+').hasMatch(value) ? 'Please enter a valid email address' : null,
                     ),
-                    SizedBox(height: 20),
-
-                    // Password Field
-                    TextFormField(
-                      obscureText: !_isDialogPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: Icon(Icons.lock, color: Colors.indigo[600]),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isDialogPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: Colors.indigo[600],
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isDialogPasswordVisible = !_isDialogPasswordVisible;
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) =>
-                      value!.isEmpty ? 'Please enter a password' : null,
+                    const SizedBox(height: 20),
+                    _buildPasswordField(
+                      label: 'Password',
+                      isVisible: _isDialogPasswordVisible,
                       onSaved: (value) => _password = value!,
+                      onVisibilityToggle: () => setState(() => _isDialogPasswordVisible = !_isDialogPasswordVisible),
                     ),
-                    SizedBox(height: 20),
-
-                    // Add Admin Button
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           _formKey.currentState!.save();
                           _addNewAdmin(_username, _email, _password);
-                          Navigator.pop(context); // Close the dialog
+                          Navigator.pop(context);
                         }
                       },
-                      child: Text(
-                        'Add Admin',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white, // Set text color to white
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo[600],
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+                      style: _buttonStyle,
+                      child: Text('Add Admin', style: _buttonTextStyle),
                     ),
                   ],
                 ),
@@ -516,73 +170,37 @@ class _AdminPanelState extends State<AdminPanel> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(
-            'Edit Admin',
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.indigo[900],
-            ),
-          ),
-          content: Container(
+          title: Text('Edit Admin', style: _dialogTitleStyle),
+          content: SizedBox(
             width: 400,
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
+                  _buildTextField(
+                    label: 'Username',
                     initialValue: _username,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      prefixIcon: Icon(Icons.person, color: Colors.indigo[600]),
-                    ),
-                    validator: (value) =>
-                    value!.isEmpty ? 'Please enter a username' : null,
                     onSaved: (value) => _username = value!,
+                    validator: (value) => value!.isEmpty ? 'Please enter a username' : null,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   TextFormField(
-                    enabled: false, // Make the email field non-editable
                     initialValue: _email,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      filled: true,
-                      fillColor: Colors.grey.shade300, // Gray background for disabled field
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      prefixIcon: Icon(Icons.email, color: Colors.indigo[600]),
-                    ),
-                    validator: (value) =>
-                    value!.isEmpty || !RegExp(r'\S+@\S+\.\S+').hasMatch(value)
-                        ? 'Please enter a valid email address'
-                        : null,
-                    onSaved: (value) => _email = value!,
+                    decoration: _inputDecoration('Email', Icons.email),
+                    enabled: false,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
                         _editAdmin(doc.id, _username, _email);
-                        Navigator.pop(context); // Close the dialog
+                        Navigator.pop(context);
                       }
                     },
-                    child: Text(
-                      'Save Changes',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo[600],
-                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                    style: _buttonStyle,
+                    child: Text('Save Changes', style: _buttonTextStyle),
                   ),
                 ],
               ),
@@ -593,58 +211,203 @@ class _AdminPanelState extends State<AdminPanel> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, String docId) {
+  void _showDeleteConfirmationDialog(BuildContext context, String docId, String email) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15), // Rounded corners for modern look
-          ),
-          title: Text(
-            'Delete Admin?',
-            style: GoogleFonts.poppins(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.indigo[900], // Match with your color scheme
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to delete this admin?',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.indigo[800], // Slightly muted color for content
-            ),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Text('Delete Admin?', style: _dialogTitleStyle),
+          content: Text('Are you sure you want to delete this admin?', style: _dialogContentStyle),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // Close the dialog
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.indigo[600], // Use the same color as the button text
-                ),
-              ),
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: _cancelButtonStyle),
             ),
             TextButton(
               onPressed: () {
-                _deleteAdmin(docId); // Delete the admin
-                Navigator.pop(context); // Close the dialog
+                _deleteAdmin(docId, email);
+                Navigator.pop(context);
               },
-              child: Text(
-                'Delete',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red[600], // Use red for delete action
-                ),
-              ),
+              child: Text('Delete', style: _deleteButtonStyle),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      prefixIcon: Icon(icon, color: Colors.indigo[600]),
+    );
+  }
+
+  TextStyle get _dialogTitleStyle => GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo[900]);
+
+  TextStyle get _dialogContentStyle => GoogleFonts.poppins(fontSize: 16, color: Colors.indigo[800]);
+
+  TextStyle get _cancelButtonStyle => GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.indigo[600]);
+
+  TextStyle get _deleteButtonStyle => GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.red[600]);
+
+  ButtonStyle get _buttonStyle => ElevatedButton.styleFrom(
+    backgroundColor: Colors.indigo[600],
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  );
+
+  TextStyle get _buttonTextStyle => GoogleFonts.poppins(fontSize: 18, color: Colors.white);
+
+  Widget _buildTextField({
+    required String label,
+    String? initialValue,
+    required FormFieldSetter<String> onSaved,
+    required FormFieldValidator<String> validator,
+  }) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: _inputDecoration(label, Icons.person),
+      validator: validator,
+      onSaved: onSaved,
+    );
+  }
+
+  Widget _buildPasswordField({
+    required String label,
+    required bool isVisible,
+    required FormFieldSetter<String> onSaved,
+    required VoidCallback onVisibilityToggle,
+  }) {
+    return TextFormField(
+      obscureText: !isVisible,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        prefixIcon: Icon(Icons.lock, color: Colors.indigo[600]),
+        suffixIcon: IconButton(
+          icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.indigo[600]),
+          onPressed: onVisibilityToggle,
+        ),
+      ),
+      validator: (value) => value!.isEmpty ? 'Please enter a password' : null,
+      onSaved: onSaved,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Card(
+          elevation: 8,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('Admin Data', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.indigo[900])),
+                    const SizedBox(width: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddAdminDialog(context),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: Text('Add New Admin', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white)),
+                      style: _buttonStyle,
+                    ),
+                    const Spacer(),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: _inputDecoration('Search admins...', Icons.search),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: _adminsStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Center(child: Text('No admins yet.'));
+                      }
+                      final admins = snapshot.data!.docs;
+                      final filteredAdmins = admins.where((doc) {
+                        final query = _searchController.text.toLowerCase();
+                        final username = doc['username'].toString().toLowerCase();
+                        final email = doc['email'].toString().toLowerCase();
+                        return query.isEmpty || username.contains(query) || email.contains(query);
+                      }).toList();
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: DataTable(
+                          headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
+                          headingTextStyle: GoogleFonts.poppins(color: Colors.indigo[900], fontWeight: FontWeight.w600),
+                          dataTextStyle: GoogleFonts.poppins(color: Colors.indigo[800]),
+                          columns: const [
+                            DataColumn(label: Text('Username')),
+                            DataColumn(label: Text('Email')),
+                            DataColumn(label: Text('Created At')),
+                            DataColumn(label: Text('Actions')),
+                          ],
+                          rows: filteredAdmins.map((doc) {
+                            final createdAt = doc['createdAt'] as Timestamp?;
+                            final formattedDate = createdAt != null
+                                ? DateFormat('yyyy-MM-dd HH:mm').format(createdAt.toDate())
+                                : 'N/A';
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(doc['username'])),
+                                DataCell(Text(doc['email'])),
+                                DataCell(Text(formattedDate)),
+                                DataCell(
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.indigo[600]),
+                                        onPressed: () => _showEditAdminDialog(context, doc),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.delete, color: Colors.red[600]),
+                                        onPressed: () => _showDeleteConfirmationDialog(context, doc.id, doc['email']),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.lock_reset, color: Colors.blue),
+                                        onPressed: () => _sendPasswordResetEmail(doc['email']),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,136 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
+import 'add-edit-restaurant-page.dart';
 
 class RestaurantManagement extends StatefulWidget {
+  const RestaurantManagement({Key? key}) : super(key: key);
+
   @override
   _RestaurantManagementState createState() => _RestaurantManagementState();
 }
 
 class _RestaurantManagementState extends State<RestaurantManagement> {
   final TextEditingController _searchController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  String _truncateWithEllipsis(String text, int maxLength) {
-    return (text.length <= maxLength) ? text : '${text.substring(0, maxLength)}...';
-  }
-
-  Future<String?> uploadImageToFirebase(XFile image) async {
+  Future<void> _logActivity(String action, String details) async {
     try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference ref = FirebaseStorage.instance.ref().child('logos/$fileName');
-
-      final metadata = SettableMetadata(
-          contentType: 'image/jpeg',
-          customMetadata: {'picked-file-path': image.path}
-      );
-
-      Uint8List imageData = await image.readAsBytes();
-      UploadTask uploadTask = ref.putData(imageData, metadata);
-
-      TaskSnapshot taskSnapshot = await uploadTask;
-      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
-      return downloadUrl;
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId != null) {
+        await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(currentUserId)
+            .collection('list_or_add_restaurant_activity_logs')
+            .add({
+          'action': action,
+          'details': details,
+          'timestamp': FieldValue.serverTimestamp(),
+          'performedBy': _auth.currentUser?.email ?? 'Unknown',
+        });
+      }
     } catch (e) {
-      print('Error uploading image: $e');
-      return null;
-    }
-  }
-
-  Future<void> _addNewRestaurant(
-      String name,
-      String owner,
-      String address,
-      String email,
-      String password,
-      String phoneNumber,
-      String logoUrl,
-      String about,
-      ) async {
-    try {
-      // Create user in Firebase Auth
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Add restaurant to Firestore with the userId as document ID
-      await FirebaseFirestore.instance.collection('restaurants').doc(userCredential.user!.uid).set({
-        'name': name,
-        'owner': owner,
-        'address': address,
-        'email': email,
-        'phoneNumber': phoneNumber,
-        'logoUrl': logoUrl,
-        'about': about,
-        'createdAt': Timestamp.now(),
-        'uid': userCredential.user!.uid,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Restaurant added successfully!'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add restaurant: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  Future<void> _editRestaurant(
-      String uid,
-      String name,
-      String owner,
-      String address,
-      String email,
-      String phoneNumber,
-      String logoUrl,
-      String about,
-      ) async {
-    try {
-      // Update the restaurant document using the UID
-      await FirebaseFirestore.instance.collection('restaurants').doc(uid).update({
-        'name': name,
-        'owner': owner,
-        'address': address,
-        'email': email,
-        'phoneNumber': phoneNumber,
-        'logoUrl': logoUrl,
-        'about': about,
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Restaurant updated successfully!'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update restaurant: $e'), backgroundColor: Colors.red),
-      );
+      print('Error logging activity: $e');
     }
   }
 
   Future<void> _deleteRestaurant(String uid) async {
     try {
-      // Get the restaurant document using the UID
-      DocumentSnapshot restaurantDoc = await FirebaseFirestore.instance.collection('restaurants').doc(uid).get();
+      DocumentSnapshot restaurantDoc = await _firestore.collection('restaurants').doc(uid).get();
 
       if (restaurantDoc.exists) {
-        // Delete the user from Firebase Auth
-        await _auth.currentUser!.delete();
+        String restaurantName = restaurantDoc['name'];
+        String ownerName = restaurantDoc['owner'];
 
-        // Delete the restaurant document from Firestore
-        await FirebaseFirestore.instance.collection('restaurants').doc(uid).delete();
+        await _firestore.collection('restaurants').doc(uid).delete();
+
+        await _logActivity('Delete Restaurant', 'Deleted restaurant: $restaurantName (Owner: $ownerName)');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restaurant deleted successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Restaurant deleted successfully!'), backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restaurant not found!'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Restaurant not found!'), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -140,11 +63,12 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     }
   }
 
-  void _sendPasswordResetEmail(String email) async {
+  Future<void> _sendPasswordResetEmail(String email) async {
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      await _auth.sendPasswordResetEmail(email: email);
+      await _logActivity('Password Reset', 'Sent password reset email to: $email');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Password reset email sent!'),
           backgroundColor: Colors.green,
         ),
@@ -163,17 +87,17 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24.0),
         child: Card(
           elevation: 8,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Padding(
-            padding: EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 Expanded(child: _buildRestaurantList()),
               ],
             ),
@@ -194,10 +118,13 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
             color: Colors.indigo[900],
           ),
         ),
-        SizedBox(width: 20),
+        const SizedBox(width: 20),
         ElevatedButton.icon(
-          onPressed: () => _showAddRestaurantDialog(context),
-          icon: Icon(Icons.add, color: Colors.white),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddEditRestaurantPage()),
+          ),
+          icon: const Icon(Icons.add, color: Colors.white),
           label: Text(
             'Add New Restaurant',
             style: GoogleFonts.poppins(
@@ -207,13 +134,13 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.indigo[600],
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
         ),
-        Spacer(),
+        const Spacer(),
         Expanded(
           child: TextField(
             controller: _searchController,
@@ -226,7 +153,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: EdgeInsets.symmetric(vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(vertical: 15),
             ),
             onChanged: (value) => setState(() {}),
           ),
@@ -237,16 +164,16 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
 
   Widget _buildRestaurantList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: _firestore
           .collection('restaurants')
           .orderBy('createdAt', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No restaurants yet.'));
+          return const Center(child: Text('No restaurants yet.'));
         }
         final restaurants = snapshot.data!.docs;
         final filteredRestaurants = restaurants.where((doc) {
@@ -289,7 +216,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         dataTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[800],
         ),
-        columns: [
+        columns: const [
           DataColumn(label: Text('Logo')),
           DataColumn(label: Text('Name')),
           DataColumn(label: Text('Owner')),
@@ -318,13 +245,12 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         dataTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[800],
         ),
-        columns: [
+        columns: const [
           DataColumn(label: Text('Logo')),
           DataColumn(label: Text('Name')),
           DataColumn(label: Text('Email')),
           DataColumn(label: Text('Phone')),
           DataColumn(label: Text('Address')),
-          DataColumn(label: Text('About')),
           DataColumn(label: Text('Actions')),
         ],
         rows: restaurants.map((doc) => DataRow(
@@ -332,18 +258,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
             DataCell(_buildLogoCell(doc.id)),
             DataCell(Text(doc['name'], overflow: TextOverflow.ellipsis)),
             DataCell(Text(doc['email'], overflow: TextOverflow.ellipsis)),
-            DataCell(Text(doc['phoneNumber'] ?? 'N/A', overflow: TextOverflow.ellipsis)), // Phone number
-            DataCell(Text(doc['address'] ?? 'N/A', overflow: TextOverflow.ellipsis)), // Address
-            DataCell(
-              Container(
-                width: 200,
-                child: Text(
-                  doc['about'] ?? 'No description',
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ),
+            DataCell(Text(doc['phoneNumber'] ?? 'N/A', overflow: TextOverflow.ellipsis)),
+            DataCell(Text(doc['address'] ?? 'N/A', overflow: TextOverflow.ellipsis)),
             DataCell(_buildActionButtons(doc)),
           ],
         )).toList(),
@@ -357,16 +273,16 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       itemBuilder: (context, index) {
         final doc = restaurants[index];
         return Card(
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           child: ListTile(
             leading: _buildLogoCell(doc.id),
-            title: Text(doc['name'], style: TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(doc['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(doc['email']),
-                Text(doc['phoneNumber'] ?? 'N/A'), // Phone number
-                Text(doc['address'] ?? 'N/A'), // Address
+                Text(doc['phoneNumber'] ?? 'N/A'),
+                Text(doc['address'] ?? 'N/A'),
               ],
             ),
             trailing: _buildActionButtons(doc),
@@ -402,13 +318,13 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
 
   Widget _buildLogoCell(String docId) {
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('restaurants').doc(docId).get(),
+      future: _firestore.collection('restaurants').doc(docId).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(strokeWidth: 2));
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
         }
         if (snapshot.hasError) {
-          return Icon(Icons.error, size: 40, color: Colors.red);
+          return const Icon(Icons.error, size: 40, color: Colors.red);
         }
         if (snapshot.hasData) {
           String? logoUrl = snapshot.data!['logoUrl'];
@@ -420,7 +336,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               print('Error loading image: $error');
-              return Icon(Icons.error, size: 40, color: Colors.red);
+              return const Icon(Icons.error, size: 40, color: Colors.red);
             },
             loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
               if (loadingProgress == null) return child;
@@ -434,9 +350,9 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
               );
             },
           )
-              : Icon(Icons.restaurant, size: 40);
+              : const Icon(Icons.restaurant, size: 40);
         } else {
-          return Icon(Icons.restaurant, size: 40);
+          return const Icon(Icons.restaurant, size: 40);
         }
       },
     );
@@ -447,7 +363,15 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       children: [
         IconButton(
           icon: Icon(Icons.edit, color: Colors.indigo[600]),
-          onPressed: () => _showEditRestaurantDialog(context, doc),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddEditRestaurantPage(
+                restaurantId: doc.id,
+                restaurantData: doc.data() as Map<String, dynamic>,
+              ),
+            ),
+          ),
         ),
         IconButton(
           icon: Icon(Icons.delete, color: Colors.red[600]),
@@ -458,203 +382,6 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           onPressed: () => _sendPasswordResetEmail(doc['email']),
         ),
       ],
-    );
-  }
-
-  void _showAddRestaurantDialog(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    String _name = '';
-    String _owner = '';
-    String _address = '';
-    String _email = '';
-    String _password = '';
-    bool _obscureText = true;
-    String _phoneNumber = '';
-    String _logoUrl = '';
-    String _about = '';
-    bool _isUploading = false;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text(
-              'Add New Restaurant',
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
-              ),
-            ),
-            content: Container(
-              width: 400,
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildTextField('Restaurant Name', Icons.restaurant, (value) => _name = value),
-                      SizedBox(height: 20),
-                      _buildTextField('Owner Name', Icons.person, (value) => _owner = value),
-                      SizedBox(height: 20),
-                      _buildTextField('Address', Icons.location_on, (value) => _address = value),
-                      SizedBox(height: 20),
-                      _buildTextField('Email', Icons.email, (value) => _email = value, isEmail: true),
-                      SizedBox(height: 20),
-                      _buildTextField('Password', Icons.lock, (value) => _password = value, isPassword: true, obscureText: _obscureText, onToggleObscure: () => setState(() => _obscureText = !_obscureText)),
-                      SizedBox(height: 20),
-                      _buildTextField('Phone Number', Icons.phone, (value) => _phoneNumber = value),
-                      SizedBox(height: 20),
-                      _buildTextField('About', Icons.info_outline, (value) => _about = value, isMultiline: true),
-                      SizedBox(height: 20),
-                      _buildLogoPickerButton(_isUploading, () async {
-                        final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-                        if (image != null) {
-                          setState(() => _isUploading = true);
-                          final url = await uploadImageToFirebase(image);
-                          setState(() {
-                            _logoUrl =
-                                url ?? '';
-                            _isUploading = false;
-                          });
-                          if (_logoUrl.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Logo picked successfully!'), backgroundColor: Colors.green),
-                            );
-                          }
-                        }
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600], fontWeight: FontWeight.w500)),
-              ),
-              ElevatedButton(
-                onPressed: _isUploading ? null : () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    _addNewRestaurant(_name, _owner, _address, _email, _password, _phoneNumber, _logoUrl, _about);
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo[600],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text('Add Restaurant', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showEditRestaurantDialog(BuildContext context, DocumentSnapshot doc) {
-    final _formKey = GlobalKey<FormState>();
-    String _name = doc['name'];
-    String _owner = doc['owner'];
-    String _address = doc['address'];
-    String _email = doc['email'];
-    String _phoneNumber = doc['phoneNumber'];
-    String _logoUrl = doc['logoUrl'];
-    String _about = doc['about'] ?? '';
-    bool _isUploading = false;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text(
-              'Edit Restaurant',
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
-              ),
-            ),
-            content: Container(
-              width: 400,
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildTextField('Restaurant Name', Icons.restaurant, (value) => _name = value, initialValue: _name),
-                      SizedBox(height: 20),
-                      _buildTextField('Owner Name', Icons.person, (value) => _owner = value, initialValue: _owner),
-                      SizedBox(height: 20),
-                      _buildTextField('Address', Icons.location_on, (value) => _address = value, initialValue: _address),
-                      SizedBox(height: 20),
-                      _buildTextField(
-                        'Email',
-                        Icons.email,
-                            (value) => _email = value,
-                        isEmail: true,
-                        initialValue: _email,
-                        enabled: false,
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      SizedBox(height: 20),
-                      _buildTextField('Phone Number', Icons.phone, (value) => _phoneNumber = value, initialValue: _phoneNumber),
-                      SizedBox(height: 20),
-                      _buildTextField('About', Icons.info_outline, (value) => _about = value, initialValue: _about, isMultiline: true),
-                      SizedBox(height: 20),
-                      _buildLogoPickerButton(_isUploading, () async {
-                        final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-                        if (image != null) {
-                          setState(() => _isUploading = true);
-                          final url = await uploadImageToFirebase(image);
-                          setState(() {
-                            _logoUrl = url ?? '';
-                            _isUploading = false;
-                          });
-                          if (_logoUrl.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Logo updated successfully!'), backgroundColor: Colors.green),
-                            );
-                          }
-                        }
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600], fontWeight: FontWeight.w500)),
-              ),
-              ElevatedButton(
-                onPressed: _isUploading ? null : () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    _editRestaurant(doc.id, _name, _owner, _address, _email, _phoneNumber, _logoUrl, _about);
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo[600],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text('Update Restaurant', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              ),
-            ],
-          );
-        },
-      ),
     );
   }
 
@@ -698,69 +425,6 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildTextField(
-      String label,
-      IconData icon,
-      Function(String) onSaved, {
-        bool isEmail = false,
-        bool isPassword = false,
-        bool obscureText = false,
-        Function()? onToggleObscure,
-        String? initialValue,
-        bool enabled = true,
-        TextStyle? style,
-        bool isMultiline = false,
-      }) {
-    return TextFormField(
-      initialValue: initialValue,
-      enabled: enabled,
-      style: style,
-      maxLines: isMultiline ? null : 1,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        prefixIcon: Icon(icon, color: Colors.indigo[600]),
-        suffixIcon: isPassword
-            ? IconButton(
-          icon: Icon(
-            obscureText ? Icons.visibility : Icons.visibility_off,
-            color: Colors.indigo[600],
-          ),
-          onPressed: onToggleObscure,
-        )
-            : null,
-        hintText: label,
-        hintStyle: style ?? TextStyle(color: Colors.grey[600]),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-      ),
-      obscureText: isPassword && obscureText,
-      validator: (value) {
-        if (value!.isEmpty) return 'Please enter $label';
-        if (isEmail && !value.contains('@')) return 'Please enter a valid email';
-        return null;
-      },
-      onSaved: (value) => onSaved(value!),
-    );
-  }
-
-  Widget _buildLogoPickerButton(bool isUploading, Function() onPressed) {
-    return ElevatedButton.icon(
-      onPressed: isUploading ? null : onPressed,
-      icon: Icon(Icons.image),
-      label: Text(isUploading ? 'Uploading...' : 'Pick Logo'),
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.indigo[600],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
     );
   }
 }

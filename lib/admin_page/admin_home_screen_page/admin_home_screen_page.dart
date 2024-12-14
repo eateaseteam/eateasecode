@@ -3,11 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart'; // For date formatting
 
 import '../add_new_admin_screen/add_new_admin_screen.dart';
 import '../admin_dashboard_screen/admin_dashboard_screen.dart';
 import '../customer_list_data/customer_list_data.dart';
 import '../list_or_add_restaurant_data/list_or_add_restaurant_data.dart';
+import '../recent_activity_screen/recent_activity_screen.dart';
 import '../welcome_screen/log_in_as_screen.dart';
 
 class AdminHomeScreenPage extends StatefulWidget {
@@ -49,7 +51,6 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     }
   }
 
-  // Log out the user and navigate to the Login screen
   Future<void> _logout() async {
     // Show confirmation dialog
     final shouldLogout = await showDialog<bool>(
@@ -79,6 +80,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     // Proceed with logout if confirmed
     if (shouldLogout == true) {
       try {
+        await _logAdminLogout(); // Log the admin logout
         await FirebaseAuth.instance.signOut(); // Sign out from Firebase Auth
         Navigator.pushReplacement(
           context,
@@ -91,6 +93,27 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _logAdminLogout() async {
+    if (widget.userId != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(widget.userId) // Use admin ID
+            .collection('logout_logs') // Separate collection for logout logs
+            .add({
+          'userId': widget.userId,
+          'email': _adminEmail, // Record the email of the user who logged out
+          'action': 'Logout',
+          'timestamp': FieldValue.serverTimestamp(),
+          'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a')
+              .format(DateTime.now()),
+        });
+      } catch (e) {
+        print('Error logging admin logout: $e');
       }
     }
   }
@@ -155,6 +178,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                   _buildListTile('Admin', Icons.person, Colors.blue[600]!),
                   _buildListTile('Customer', Icons.person_outline, Colors.blue[600]!),
                   _buildListTile('Restaurant', Icons.restaurant, Colors.blue[600]!),
+                  _buildListTile('Recent Activity', Icons.history, Colors.blue[600]!),
                   // Log Out Tile with red icon
                   ListTile(
                     leading: Icon(Icons.exit_to_app, color: Colors.red),
@@ -180,6 +204,8 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                 ? CustomerListPage()
                 : _currentPage == 'Restaurant'
                 ? RestaurantManagement()
+                : _currentPage == 'Recent Activity'
+                ? RecentActivityScreen()
                 : Center(child: Text('Content for $_currentPage')),
           ),
         ],

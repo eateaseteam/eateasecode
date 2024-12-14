@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../android_users/HomePage/RestaurantPage/restaurant_data_manager.dart';
 
@@ -17,10 +18,39 @@ class ReservationHistoryPage extends StatefulWidget {
 class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
   final TextEditingController _searchController = TextEditingController();
   final RestaurantDataManager _dataManager = RestaurantDataManager();
+  //final CollectionReference _logsCollection = FirebaseFirestore.instance.collection('reservation_history_logs');
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final Color _primaryColor = Color(0xFF4A90E2);
   final Color _secondaryColor = Color(0xFF5C6BC0);
   final Color _backgroundColor = Color(0xFFF5F7FA);
+
+  Stream<QuerySnapshot> _getRecentReservationHistoryStream() {
+    return FirebaseFirestore.instance
+        .collection('restaurants')
+        .doc(widget.restaurantId)
+        .collection('recent_reservation_history')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  Future<void> _logActivity(String action, Map<String, dynamic> details) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('restaurants')
+          .doc(widget.restaurantId)
+          .collection('reservation_history_page_logs')
+          .add({
+        'action': action,
+        'details': details,
+        'timestamp': FieldValue.serverTimestamp(),
+        'performedBy': _auth.currentUser?.email ?? 'Unknown',
+        'restaurantId': widget.restaurantId,
+      });
+    } catch (e) {
+      print('Error logging activity: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +111,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
 
   Widget _buildReservationList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _dataManager.getReservationsStream(widget.restaurantId),
+      stream: _getRecentReservationHistoryStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: _primaryColor));
@@ -115,15 +145,17 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     String searchTerm = _searchController.text.toLowerCase();
     return reservations.where((reservation) {
       Map<String, dynamic> data = reservation.data() as Map<String, dynamic>;
-      return data['userEmail'].toString().toLowerCase().contains(searchTerm) ||
-          data['referenceNumber'].toString().toLowerCase().contains(searchTerm);
+      Map<String, dynamic> reservationData = data['reservationData'] as Map<String, dynamic>;
+      return reservationData['userEmail'].toString().toLowerCase().contains(searchTerm) ||
+          reservationData['referenceNumber'].toString().toLowerCase().contains(searchTerm) ||
+          reservationData['status'].toString().toLowerCase().contains(searchTerm);
     }).toList();
   }
 
   List<DocumentSnapshot> _getReservationsForPeriod(List<DocumentSnapshot> reservations, int startDays, int? endDays) {
     DateTime now = DateTime.now();
     return reservations.where((reservation) {
-      DateTime reservationDate = (reservation['reservationDateTime'] as Timestamp).toDate();
+      DateTime reservationDate = (reservation['reservationData']['reservationDateTime'] as Timestamp).toDate();
       int daysDifference = now.difference(reservationDate).inDays;
       return daysDifference >= startDays && (endDays == null || daysDifference < endDays);
     }).toList();
@@ -157,18 +189,31 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                 DataColumn(label: Text('Guests')),
                 DataColumn(label: Text('Date/Time')),
                 DataColumn(label: Text('Status')),
-                DataColumn(label: Text('Actions')),
+                DataColumn(label: Text('Action')),
               ],
               rows: reservations.map((reservation) {
                 Map<String, dynamic> data = reservation.data() as Map<String, dynamic>;
+                Map<String, dynamic> reservationData = data['reservationData'] as Map<String, dynamic>;
                 return DataRow(
                   cells: [
-                    DataCell(Text(reservation.id)),
-                    DataCell(Text(data['userEmail'] ?? 'N/A')),
-                    DataCell(Text(data['guestCount'].toString())),
-                    DataCell(Text(DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate()))),
-                    DataCell(_buildStatusBadge(data['status'])),
-                    DataCell(_buildActionButtons(reservation.id)),
+                    DataCell(Text(reservation.id)), // Updated line
+                    DataCell(Text(reservationData['userEmail'] ?? 'N/A')),
+                    DataCell(Text(reservationData['guestCount'].toString())),
+                    DataCell(Text(DateFormat('MM/dd/yy h:mm a').format((reservationData['reservationDateTime'] as Timestamp).toDate()))),
+                    DataCell(_buildStatusBadge(reservationData['status'])),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(data['action']),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red, size: 20),
+                            onPressed: () => _confirmDeleteReservation(reservation.id), // Updated line
+                            tooltip: 'Delete',
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 );
               }).toList(),
@@ -181,7 +226,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
 
   Widget _buildStatusBadge(String status) {
     Color color;
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'completed':
         color = Colors.green;
         break;
@@ -331,7 +376,10 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
               _deleteReservation(reservationId);
             },
             child: Text('Delete'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white, // Sets the text color to white
+            ),
           ),
         ],
       ),
@@ -340,26 +388,61 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
 
   void _deleteReservation(String reservationId) async {
     try {
-      await FirebaseFirestore.instance
+      // Fetch the reservation details before deleting
+      DocumentSnapshot reservationDoc = await FirebaseFirestore.instance
           .collection('restaurants')
           .doc(widget.restaurantId)
-          .collection('reservations')
+          .collection('recent_reservation_history')
           .doc(reservationId)
-          .delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Reservation deleted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+          .get();
+
+      if (reservationDoc.exists) {
+        Map<String, dynamic> reservationData = reservationDoc.data() as Map<String, dynamic>;
+
+        String performedBy = FirebaseAuth.instance.currentUser?.email ?? 'Unknown';
+
+        // Delete the reservation history entry
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(widget.restaurantId)
+            .collection('recent_reservation_history')
+            .doc(reservationId)
+            .delete();
+
+        // Log the deletion
+        await _logActivity(
+            'Delete Reservation History Entry',
+            {
+              'ID': reservationId,
+              'Customer': reservationData['reservationData']['userEmail'],
+              'Guests': reservationData['reservationData']['guestCount'],
+              'Date/Time': DateFormat('MM/dd/yy h:mm a').format((reservationData['reservationData']['reservationDateTime'] as Timestamp).toDate()),
+              'Status': reservationData['reservationData']['status'],
+              'Performed By': performedBy
+            }
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reservation history entry deleted successfully by $performedBy'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception('Reservation history entry not found');
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error deleting reservation: $e'),
+          content: Text('Error deleting reservation history entry: $e'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 }
+
+
+
+
 

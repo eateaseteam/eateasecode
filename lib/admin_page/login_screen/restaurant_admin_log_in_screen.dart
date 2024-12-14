@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
 
 class RestaurantAdminLoginPage extends StatefulWidget {
   @override
-  _RestaurantAdminLoginPageState createState() => _RestaurantAdminLoginPageState();
+  _RestaurantAdminLoginPageState createState() =>
+      _RestaurantAdminLoginPageState();
 }
 
 class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isObscurePassword = true;
-  String? _adminEmail; // To hold the admin email
 
   @override
   void dispose() {
@@ -35,16 +36,30 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
       // Fetch the restaurant details using the user's UID (now the document ID)
       DocumentSnapshot restaurantDoc = await FirebaseFirestore.instance
           .collection('restaurants')
-          .doc(userCredential.user!.uid)  // Use the UID as the document ID
+          .doc(userCredential.user!.uid)
           .get();
 
       if (restaurantDoc.exists) {
+        // Log the login activity under the specific restaurant's collection
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(userCredential.user!.uid) // Use restaurant ID
+            .collection('login_logs') // Create a separate collection for logs
+            .add({
+          'userId': userCredential.user!.uid,
+          'email': email, // Record the email of the user who logged in
+          'action': 'Login',
+          'timestamp': FieldValue.serverTimestamp(),
+          'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a')
+              .format(DateTime.now()),
+        });
+
         // Restaurant found, navigate to the Restaurant Admin Dashboard
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => RestaurantAdminDashboardPage(
-              userId: userCredential.user!.uid, // Pass UID as userId
+              userId: userCredential.user!.uid,
             ),
           ),
         );
@@ -67,9 +82,6 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
       );
     }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -185,17 +197,6 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16.0),
-              if (_adminEmail != null)
-                Text(
-                  'Logged in as: $_adminEmail', // Display the admin email after login
-                  style: GoogleFonts.inter(
-                    color: Colors.green,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
             ],
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../android_users/HomePage/RestaurantPage/restaurant_data_manager.dart';
 
 class ReservationPage extends StatefulWidget {
@@ -16,6 +17,55 @@ class ReservationPage extends StatefulWidget {
 class _ReservationPageState extends State<ReservationPage> {
   final RestaurantDataManager _restaurantDataManager = RestaurantDataManager();
   final ScrollController _horizontalScrollController = ScrollController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _logReservationActivity(String action, String reservationId, Map<String, dynamic> reservationData) async {
+    try {
+      await _firestore
+          .collection('restaurants')
+          .doc(widget.restaurantId)
+          .collection('reservation_page_logs')
+          .add({
+        'action': action,
+        'reservationId': reservationId,
+        'userEmail': reservationData['userEmail'],
+        'orderDetails': reservationData['items'],
+        'totalPayment': reservationData['totalPrice'],
+        'guestCount': reservationData['guestCount'],
+        'reservationDateTime': reservationData['reservationDateTime'],
+        'paymentMethod': reservationData['paymentMethod'],
+        'referenceNumber': reservationData['referenceNumber'],
+        'status': reservationData['status'],
+        'timestamp': FieldValue.serverTimestamp(),
+        'performedBy': _auth.currentUser?.email ?? 'Unknown',
+      });
+
+      // Store reservation data in recent_reservation_history
+      await _storeRecentReservationHistory(action, reservationId, reservationData);
+    } catch (e) {
+      print('Error logging reservation activity: $e');
+    }
+  }
+
+  Future<void> _storeRecentReservationHistory(String action, String reservationId, Map<String, dynamic> reservationData) async {
+    try {
+      await _firestore
+          .collection('restaurants')
+          .doc(widget.restaurantId)
+          .collection('recent_reservation_history')
+          .add({
+        'action': action,
+        'reservationId': reservationId,
+        'reservationData': reservationData,
+        'timestamp': FieldValue.serverTimestamp(),
+        'performedBy': _auth.currentUser?.email ?? 'Unknown',
+      });
+    } catch (e) {
+      print('Error storing recent reservation history: $e');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -404,12 +454,28 @@ class _ReservationPageState extends State<ReservationPage> {
             onPressed: () async {
               Navigator.of(context).pop();
               try {
+                DocumentSnapshot reservationDoc = await FirebaseFirestore.instance
+                    .collection('restaurants')
+                    .doc(widget.restaurantId)
+                    .collection('reservations')
+                    .doc(reservationId)
+                    .get();
+
+                Map<String, dynamic> reservationData = reservationDoc.data() as Map<String, dynamic>;
+
+                // Store reservation data in recent_reservation_history before deleting
+                await _storeRecentReservationHistory('Delete Reservation', reservationId, reservationData);
+
                 await FirebaseFirestore.instance
                     .collection('restaurants')
                     .doc(widget.restaurantId)
                     .collection('reservations')
                     .doc(reservationId)
                     .delete();
+
+                // Add logging with full reservation data
+                await _logReservationActivity('Delete Reservation', reservationId, reservationData);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Reservation deleted successfully'),
@@ -578,30 +644,6 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  void _deleteReservation(String reservationId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('restaurants')
-          .doc(widget.restaurantId)
-          .collection('reservations')
-          .doc(reservationId)
-          .delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Reservation deleted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error deleting reservation: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -755,8 +797,25 @@ class _ReservationPageState extends State<ReservationPage> {
             onPressed: () async {
               Navigator.of(context).pop();
               try {
+                DocumentSnapshot reservationDoc = await _firestore
+                    .collection('restaurants')
+                    .doc(widget.restaurantId)
+                    .collection('reservations')
+                    .doc(reservationId)
+                    .get();
+
+                Map<String, dynamic> reservationData = reservationDoc.data() as Map<String, dynamic>;
+                reservationData['status'] = newStatus;
+
+                // Store reservation data in recent_reservation_history before updating
+                await _storeRecentReservationHistory('Update Status', reservationId, reservationData);
+
                 await _restaurantDataManager.updateReservationStatus(
                     widget.restaurantId, reservationId, newStatus);
+
+                // Add logging with full reservation data
+                await _logReservationActivity('Update Status', reservationId, reservationData);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Reservation status updated successfully'),
@@ -883,4 +942,6 @@ class ReservationSearchDelegate extends SearchDelegate {
     );
   }
 }
+
+
 

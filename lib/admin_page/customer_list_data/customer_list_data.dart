@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class CustomerListPage extends StatefulWidget {
+  const CustomerListPage({Key? key}) : super(key: key);
+
   @override
   _CustomerListPageState createState() => _CustomerListPageState();
 }
@@ -16,18 +19,40 @@ class _CustomerListPageState extends State<CustomerListPage> {
   Stream<List<Map<String, dynamic>>> _getCustomers() {
     return _customersCollection.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
         return {
           'id': doc.id,
-          'lastName': doc['lastName'],
-          'firstName': doc['firstName'],
-          'email': doc['email'],
+          'lastName': data['lastName'] ?? '',
+          'firstName': data['firstName'] ?? '',
+          'email': data['email'] ?? '',
+          'createdAt': data['createdAt'] ?? Timestamp.now(),
         };
       }).toList();
     });
   }
 
-  void _deleteCustomer(String id, String firstName, String lastName) {
-    showDialog(
+  Future<void> _logActivity(String action, String details) async {
+    try {
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId != null) {
+        await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(currentUserId)
+            .collection('customer_list_data_logs') // Changed to customer_list_data_logs
+            .add({
+          'action': action,
+          'details': details,
+          'timestamp': FieldValue.serverTimestamp(),
+          'performedBy': _auth.currentUser?.email ?? 'Unknown',
+        });
+      }
+    } catch (e) {
+      print('Error logging activity: $e');
+    }
+  }
+
+  Future<void> _deleteCustomer(String id, String firstName, String lastName) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -35,15 +60,11 @@ class _CustomerListPageState extends State<CustomerListPage> {
           content: Text('Are you sure you want to delete $firstName $lastName?', style: GoogleFonts.inter()),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context, false),
               child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey[600])),
             ),
             ElevatedButton(
-              onPressed: () {
-                _customersCollection.doc(id).delete();
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$firstName $lastName has been deleted.')));
-              },
+              onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.red[600]),
               child: Text('Delete', style: GoogleFonts.inter()),
             ),
@@ -51,16 +72,32 @@ class _CustomerListPageState extends State<CustomerListPage> {
         );
       },
     );
+
+    if (result == true) {
+      try {
+        await _customersCollection.doc(id).delete();
+        await _logActivity('Delete Customer', 'Deleted customer: $firstName $lastName (ID: $id)');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('$firstName $lastName has been deleted.'),
+          backgroundColor: Colors.green,
+        ));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error deleting customer: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            bool isSmallScreen = constraints.maxWidth < 600;
+            final isSmallScreen = constraints.maxWidth < 600;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -76,132 +113,26 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         ),
                       ),
                     ),
-                    if (!isSmallScreen)
-                      Container(
-                        width: 300,
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search for...',
-                            prefixIcon: Icon(Icons.search, color: Colors.grey),
-                            filled: true,
-                            fillColor: Colors.grey[100],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onChanged: (value) => setState(() {}),
-                        ),
-                      ),
+                    if (!isSmallScreen) _buildSearchField(),
                   ],
                 ),
-                SizedBox(height: 16),
-                if (isSmallScreen)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search for...',
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onChanged: (value) => setState(() {}),
-                    ),
-                  ),
+                const SizedBox(height: 16),
+                if (isSmallScreen) _buildSearchField(),
                 Expanded(
                   child: StreamBuilder<List<Map<String, dynamic>>>(
                     stream: _getCustomers(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
+                        return const Center(child: CircularProgressIndicator());
                       }
                       if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
                       }
 
                       final customers = snapshot.data!;
-                      final filteredCustomers = customers.where((customer) {
-                        final query = _searchController.text.toLowerCase();
-                        return customer['lastName'].toLowerCase().contains(query) ||
-                            customer['firstName'].toLowerCase().contains(query) ||
-                            customer['email'].toLowerCase().contains(query);
-                      }).toList();
+                      final filteredCustomers = _filterCustomers(customers);
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, 4)),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: DataTable(
-                              headingRowColor: MaterialStateProperty.all(Color(0xFF2D3748)),
-                              headingTextStyle: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
-                              columns: [
-                                DataColumn(label: Text('ID')),
-                                DataColumn(label: Text('Last Name')),
-                                DataColumn(label: Text('First Name')),
-                                DataColumn(label: Text('Email')),
-                                DataColumn(label: Text('Actions')),
-                              ],
-                              rows: filteredCustomers.map((customer) {
-                                return DataRow(
-                                  cells: [
-                                    DataCell(
-                                      SizedBox(
-                                        width: isSmallScreen ? 60 : 100,
-                                        child: Text(customer['id'], overflow: TextOverflow.ellipsis, style: GoogleFonts.inter()),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      SizedBox(
-                                        width: isSmallScreen ? 80 : 120,
-                                        child: Text(customer['lastName'], overflow: TextOverflow.ellipsis, style: GoogleFonts.inter()),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      SizedBox(
-                                        width: isSmallScreen ? 80 : 120,
-                                        child: Text(customer['firstName'], overflow: TextOverflow.ellipsis, style: GoogleFonts.inter()),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      SizedBox(
-                                        width: isSmallScreen ? 120 : 160,
-                                        child: Text(customer['email'], overflow: TextOverflow.ellipsis, style: GoogleFonts.inter()),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red[600]),
-                                        onPressed: () => _deleteCustomer(
-                                          customer['id'],
-                                          customer['firstName'],
-                                          customer['lastName'],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                      );
+                      return _buildCustomerTable(filteredCustomers, isSmallScreen);
                     },
                   ),
                 ),
@@ -210,6 +141,99 @@ class _CustomerListPageState extends State<CustomerListPage> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return SizedBox(
+      width: 300,
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search for...',
+          prefixIcon: Icon(Icons.search, color: Colors.grey),
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+        onChanged: (value) => setState(() {}),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _filterCustomers(List<Map<String, dynamic>> customers) {
+    final query = _searchController.text.toLowerCase();
+    return customers.where((customer) {
+      return customer['lastName'].toLowerCase().contains(query) ||
+          customer['firstName'].toLowerCase().contains(query) ||
+          customer['email'].toLowerCase().contains(query);
+    }).toList();
+  }
+
+  Widget _buildCustomerTable(List<Map<String, dynamic>> customers, bool isSmallScreen) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SingleChildScrollView(
+            child: DataTable(
+              headingRowColor: MaterialStateProperty.all(const Color(0xFF2D3748)),
+              headingTextStyle: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+              columns: [
+                DataColumn(label: Text('ID')),
+                DataColumn(label: Text('Last Name')),
+                DataColumn(label: Text('First Name')),
+                DataColumn(label: Text('Email')),
+                DataColumn(label: Text('Created At')),
+                DataColumn(label: Text('Actions')),
+              ],
+              rows: customers.map((customer) {
+                return DataRow(
+                  cells: [
+                    DataCell(_buildTableCell(customer['id'], isSmallScreen ? 60 : 100)),
+                    DataCell(_buildTableCell(customer['lastName'], isSmallScreen ? 80 : 120)),
+                    DataCell(_buildTableCell(customer['firstName'], isSmallScreen ? 80 : 120)),
+                    DataCell(_buildTableCell(customer['email'], isSmallScreen ? 120 : 160)),
+                    DataCell(_buildTableCell(
+                      DateFormat('yyyy-MM-dd HH:mm').format((customer['createdAt'] as Timestamp).toDate()),
+                      isSmallScreen ? 100 : 140,
+                    )),
+                    DataCell(
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red[600]),
+                        onPressed: () => _deleteCustomer(
+                          customer['id'],
+                          customer['firstName'],
+                          customer['lastName'],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableCell(String text, double width) {
+    return SizedBox(
+      width: width,
+      child: Text(text, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter()),
     );
   }
 }
