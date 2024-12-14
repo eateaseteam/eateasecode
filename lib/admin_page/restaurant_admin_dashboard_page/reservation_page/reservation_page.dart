@@ -154,6 +154,7 @@ class _ReservationPageState extends State<ReservationPage> {
 
   Widget _buildAppBar() {
     return SliverAppBar(
+      automaticallyImplyLeading: false, // Removes the back button
       floating: true,
       pinned: true,
       elevation: 2,
@@ -182,6 +183,7 @@ class _ReservationPageState extends State<ReservationPage> {
       ],
     );
   }
+
 
   Widget _buildReservationSection(
       String title,
