@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'add-edit-restaurant-page.dart';
 
 class RestaurantManagement extends StatefulWidget {
-  const RestaurantManagement({Key? key}) : super(key: key);
+  const RestaurantManagement({super.key});
 
   @override
   _RestaurantManagementState createState() => _RestaurantManagementState();
@@ -36,7 +36,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     }
   }
 
-  Future<void> _deleteRestaurant(String uid) async {
+  Future<void> _disableRestaurant(String uid) async {
     try {
       DocumentSnapshot restaurantDoc = await _firestore.collection('restaurants').doc(uid).get();
 
@@ -44,12 +44,13 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         String restaurantName = restaurantDoc['name'];
         String ownerName = restaurantDoc['owner'];
 
-        await _firestore.collection('restaurants').doc(uid).delete();
+        // Update the 'disabled' field to true
+        await _firestore.collection('restaurants').doc(uid).update({'disabled': true});
 
-        await _logActivity('Delete Restaurant', 'Deleted restaurant: $restaurantName (Owner: $ownerName)');
+        await _logActivity('Disable Restaurant', 'Disabled restaurant: $restaurantName (Owner: $ownerName)');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restaurant deleted successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Restaurant disabled successfully!'), backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -58,10 +59,11 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete restaurant: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Failed to disable restaurant: $e'), backgroundColor: Colors.red),
       );
     }
   }
+
 
   Future<void> _sendPasswordResetEmail(String email) async {
     try {
@@ -122,7 +124,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         ElevatedButton.icon(
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddEditRestaurantPage()),
+            MaterialPageRoute(builder: (context) => const AddEditRestaurantPage()),
           ),
           icon: const Icon(Icons.add, color: Colors.white),
           label: Text(
@@ -208,7 +210,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       child: DataTable(
         columnSpacing: 20,
         horizontalMargin: 12,
-        headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
+        headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
         headingTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[900],
           fontWeight: FontWeight.w600,
@@ -237,7 +239,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       child: DataTable(
         columnSpacing: 20,
         horizontalMargin: 12,
-        headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
+        headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
         headingTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[900],
           fontWeight: FontWeight.w600,
@@ -266,6 +268,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       ),
     );
   }
+
+
 
   Widget _buildCompactDataTable(List<DocumentSnapshot> restaurants) {
     return ListView.builder(
@@ -302,7 +306,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         DataCell(Text(doc['email'], overflow: TextOverflow.ellipsis)),
         DataCell(Text(doc['phoneNumber'], overflow: TextOverflow.ellipsis)),
         DataCell(
-          Container(
+          SizedBox(
             width: 200,
             child: Text(
               doc['about'] ?? 'No description',
@@ -358,7 +362,40 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
+// Function to enable the restaurant
+  Future<void> _enableRestaurant(String uid) async {
+    try {
+
+      DocumentSnapshot restaurantDoc = await _firestore.collection('restaurants').doc(uid).get();
+
+      if (restaurantDoc.exists) {
+        String restaurantName = restaurantDoc['name'];
+        String ownerName = restaurantDoc['owner'];
+
+        // Update the 'disabled' field to false
+        await _firestore.collection('restaurants').doc(uid).update({'disabled': false});
+
+        await _logActivity('Enable Restaurant', 'Enabled restaurant: $restaurantName (Owner: $ownerName)');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Restaurant enabled successfully!'), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Restaurant not found!'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to enable restaurant: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+// Updated action buttons with Enable/Disable Logic
   Widget _buildActionButtons(DocumentSnapshot doc) {
+    bool isDisabled = doc['disabled'] ?? false; // Read the 'disabled' status from Firestore
+
     return Row(
       children: [
         IconButton(
@@ -374,9 +411,20 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           ),
         ),
         IconButton(
-          icon: Icon(Icons.delete, color: Colors.red[600]),
-          onPressed: () => _showDeleteConfirmationDialog(context, doc.id),
+          icon: Icon(
+            isDisabled ? Icons.toggle_on : Icons.toggle_off,
+            color: isDisabled ? Colors.green : Colors.red,
+          ),
+          onPressed: () {
+            if (isDisabled) {
+              _showEnableConfirmationDialog(context, doc.id);
+            } else {
+              _showDisableConfirmationDialog(context, doc.id);
+            }
+          },
+
         ),
+
         IconButton(
           icon: Icon(Icons.lock_reset, color: Colors.orange[600]),
           onPressed: () => _sendPasswordResetEmail(doc['email']),
@@ -385,47 +433,85 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, String docId) {
+
+  void _showEnableConfirmationDialog(BuildContext context, String docId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            'Confirm Delete',
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.indigo[900],
-            ),
+            'Confirm Enable',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
-          content: Text(
-            'Are you sure you want to delete this restaurant?',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.indigo[800],
-            ),
-          ),
-          actions: <Widget>[
+          content: const Text('Are you sure you want to enable this restaurant?'),
+          actions: [
             TextButton(
-              child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600], fontWeight: FontWeight.w500)),
               onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey[700]),
+              ),
             ),
             ElevatedButton(
-              child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[600],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
               onPressed: () {
-                _deleteRestaurant(docId);
                 Navigator.of(context).pop();
+                _enableRestaurant(docId);
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: Text(
+                'Enable',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
             ),
           ],
         );
       },
     );
   }
+
+
+
+  void _showDisableConfirmationDialog(BuildContext context, String docId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Confirm Disable',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Are you sure you want to disable this restaurant?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey[700]),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _disableRestaurant(docId);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              ),
+              child: Text(
+                'Disable',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }
 

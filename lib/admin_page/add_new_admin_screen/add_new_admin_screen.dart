@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 class AdminPanel extends StatefulWidget {
-  const AdminPanel({Key? key}) : super(key: key);
+  const AdminPanel({super.key});
 
   @override
   _AdminPanelState createState() => _AdminPanelState();
@@ -102,11 +102,11 @@ class _AdminPanelState extends State<AdminPanel> {
   }
 
   void _showAddAdminDialog(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    String _username = '';
-    String _email = '';
-    String _password = '';
-    bool _isDialogPasswordVisible = false;
+    final formKey = GlobalKey<FormState>();
+    String username = '';
+    String email = '';
+    String password = '';
+    bool isDialogPasswordVisible = false;
 
     showDialog(
       context: context,
@@ -117,34 +117,34 @@ class _AdminPanelState extends State<AdminPanel> {
             content: SizedBox(
               width: 400,
               child: Form(
-                key: _formKey,
+                key: formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildTextField(
                       label: 'Username',
-                      onSaved: (value) => _username = value!,
+                      onSaved: (value) => username = value!,
                       validator: (value) => value!.isEmpty ? 'Please enter a username' : null,
                     ),
                     const SizedBox(height: 20),
                     _buildTextField(
                       label: 'Email',
-                      onSaved: (value) => _email = value!,
+                      onSaved: (value) => email = value!,
                       validator: (value) => value!.isEmpty || !RegExp(r'\S+@\S+\.\S+').hasMatch(value) ? 'Please enter a valid email address' : null,
                     ),
                     const SizedBox(height: 20),
                     _buildPasswordField(
                       label: 'Password',
-                      isVisible: _isDialogPasswordVisible,
-                      onSaved: (value) => _password = value!,
-                      onVisibilityToggle: () => setState(() => _isDialogPasswordVisible = !_isDialogPasswordVisible),
+                      isVisible: isDialogPasswordVisible,
+                      onSaved: (value) => password = value!,
+                      onVisibilityToggle: () => setState(() => isDialogPasswordVisible = !isDialogPasswordVisible),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          _addNewAdmin(_username, _email, _password);
+                        if (formKey.currentState!.validate()) {
+                          formKey.currentState!.save();
+                          _addNewAdmin(username, email, password);
                           Navigator.pop(context);
                         }
                       },
@@ -162,9 +162,9 @@ class _AdminPanelState extends State<AdminPanel> {
   }
 
   void _showEditAdminDialog(BuildContext context, DocumentSnapshot doc) {
-    final _formKey = GlobalKey<FormState>();
-    String _username = doc['username'];
-    String _email = doc['email'];
+    final formKey = GlobalKey<FormState>();
+    String username = doc['username'];
+    String email = doc['email'];
 
     showDialog(
       context: context,
@@ -174,28 +174,28 @@ class _AdminPanelState extends State<AdminPanel> {
           content: SizedBox(
             width: 400,
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildTextField(
                     label: 'Username',
-                    initialValue: _username,
-                    onSaved: (value) => _username = value!,
+                    initialValue: username,
+                    onSaved: (value) => username = value!,
                     validator: (value) => value!.isEmpty ? 'Please enter a username' : null,
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
-                    initialValue: _email,
+                    initialValue: email,
                     decoration: _inputDecoration('Email', Icons.email),
                     enabled: false,
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        _editAdmin(doc.id, _username, _email);
+                      if (formKey.currentState!.validate()) {
+                        formKey.currentState!.save();
+                        _editAdmin(doc.id, username, email);
                         Navigator.pop(context);
                       }
                     },
@@ -358,7 +358,7 @@ class _AdminPanelState extends State<AdminPanel> {
                       return SingleChildScrollView(
                         scrollDirection: Axis.vertical,
                         child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
+                          headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
                           headingTextStyle: GoogleFonts.poppins(color: Colors.indigo[900], fontWeight: FontWeight.w600),
                           dataTextStyle: GoogleFonts.poppins(color: Colors.indigo[800]),
                           columns: const [
@@ -389,7 +389,7 @@ class _AdminPanelState extends State<AdminPanel> {
                                         onPressed: () => _showDeleteConfirmationDialog(context, doc.id, doc['email']),
                                       ),
                                       IconButton(
-                                        icon: Icon(Icons.lock_reset, color: Colors.blue),
+                                        icon: const Icon(Icons.lock_reset, color: Colors.blue),
                                         onPressed: () => _sendPasswordResetEmail(doc['email']),
                                       ),
                                     ],

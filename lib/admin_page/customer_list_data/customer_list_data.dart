@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 class CustomerListPage extends StatefulWidget {
-  const CustomerListPage({Key? key}) : super(key: key);
+  const CustomerListPage({super.key});
 
   @override
   _CustomerListPageState createState() => _CustomerListPageState();
@@ -151,7 +151,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
         controller: _searchController,
         decoration: InputDecoration(
           hintText: 'Search for...',
-          prefixIcon: Icon(Icons.search, color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
           filled: true,
           fillColor: Colors.grey[100],
           border: OutlineInputBorder(
@@ -189,9 +189,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
           scrollDirection: Axis.horizontal,
           child: SingleChildScrollView(
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(const Color(0xFF2D3748)),
+              headingRowColor: WidgetStateProperty.all(const Color(0xFF2D3748)),
               headingTextStyle: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
-              columns: [
+              columns: const [
                 DataColumn(label: Text('ID')),
                 DataColumn(label: Text('Last Name')),
                 DataColumn(label: Text('First Name')),

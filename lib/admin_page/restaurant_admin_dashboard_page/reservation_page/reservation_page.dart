@@ -8,7 +8,7 @@ import '../../../android_users/HomePage/RestaurantPage/restaurant_data_manager.d
 class ReservationPage extends StatefulWidget {
   final String restaurantId;
 
-  const ReservationPage({Key? key, required this.restaurantId}) : super(key: key);
+  const ReservationPage({super.key, required this.restaurantId});
 
   @override
   _ReservationPageState createState() => _ReservationPageState();
@@ -92,7 +92,7 @@ class _ReservationPageState extends State<ReservationPage> {
                     child: Center(
                       child: Text(
                         'Error: ${snapshot.error}',
-                        style: TextStyle(color: Colors.red),
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ),
                   );
@@ -104,8 +104,8 @@ class _ReservationPageState extends State<ReservationPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.event_busy, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
+                          const Icon(Icons.event_busy, size: 64, color: Colors.grey),
+                          const SizedBox(height: 16),
                           Text(
                             'No reservations found',
                             style: GoogleFonts.inter(
@@ -168,7 +168,7 @@ class _ReservationPageState extends State<ReservationPage> {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.search, color: Colors.black87),
+          icon: const Icon(Icons.search, color: Colors.black87),
           onPressed: () {
             showSearch(
               context: context,
@@ -190,10 +190,10 @@ class _ReservationPageState extends State<ReservationPage> {
       List<QueryDocumentSnapshot> reservations,
       Color accentColor,
       ) {
-    if (reservations.isEmpty) return SizedBox.shrink();
+    if (reservations.isEmpty) return const SizedBox.shrink();
 
     return Card(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
@@ -211,7 +211,7 @@ class _ReservationPageState extends State<ReservationPage> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text(
                   '$title Reservations',
                   style: GoogleFonts.inter(
@@ -220,9 +220,9 @@ class _ReservationPageState extends State<ReservationPage> {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: accentColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -254,7 +254,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
-                columns: [
+                columns: const [
                   DataColumn(label: Text('Customer Email')),
                   DataColumn(label: Text('Order Details')),
                   DataColumn(label: Text('Guests')),
@@ -328,7 +328,7 @@ class _ReservationPageState extends State<ReservationPage> {
         ),
       ],
       child: Container(
-        constraints: BoxConstraints(maxWidth: 200),
+        constraints: const BoxConstraints(maxWidth: 200),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -339,7 +339,7 @@ class _ReservationPageState extends State<ReservationPage> {
                 style: GoogleFonts.inter(),
               ),
             ),
-            Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(Icons.arrow_drop_down, size: 18),
           ],
         ),
       ),
@@ -348,7 +348,7 @@ class _ReservationPageState extends State<ReservationPage> {
 
   Widget _buildStatusBadge(String status, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
@@ -371,36 +371,29 @@ class _ReservationPageState extends State<ReservationPage> {
       children: [
         if (status == 'pending') ...[
           IconButton(
-            icon: Icon(Icons.check_circle_outline, color: Colors.green),
+            icon: const Icon(Icons.check_circle_outline, color: Colors.green),
             onPressed: () => _updateReservationStatus(reservationId, 'approved'),
             tooltip: 'Approve',
           ),
           IconButton(
-            icon: Icon(Icons.cancel_outlined, color: Colors.red),
+            icon: const Icon(Icons.cancel_outlined, color: Colors.red),
             onPressed: () => _updateReservationStatus(reservationId, 'cancelled'),
             tooltip: 'Cancel',
           ),
         ] else if (status == 'approved') ...[
           IconButton(
-            icon: Icon(Icons.check_circle, color: Colors.blue),
+            icon: const Icon(Icons.check_circle, color: Colors.blue),
             onPressed: () => _updateReservationStatus(reservationId, 'completed'),
             tooltip: 'Complete',
           ),
+
         ],
-        IconButton(
-          icon: Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: () => _confirmDeleteReservation(reservationId),
-          tooltip: 'Delete',
-        ),
         PopupMenuButton<String>(
           icon: Icon(Icons.more_vert, color: Colors.grey[600]),
           onSelected: (value) async {
             switch (value) {
               case 'view':
                 _showReservationDetails(data);
-                break;
-              case 'delete':
-                _confirmDeleteReservation(reservationId);
                 break;
             }
           },
@@ -409,19 +402,9 @@ class _ReservationPageState extends State<ReservationPage> {
               value: 'view',
               child: Row(
                 children: [
-                  Icon(Icons.visibility_outlined, size: 20, color: Colors.black87),
-                  SizedBox(width: 8),
+                  const Icon(Icons.visibility_outlined, size: 20, color: Colors.black87),
+                  const SizedBox(width: 8),
                   Text('View Details', style: GoogleFonts.inter()),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete', style: GoogleFonts.inter()),
                 ],
               ),
             ),
@@ -479,7 +462,7 @@ class _ReservationPageState extends State<ReservationPage> {
                 await _logReservationActivity('Delete Reservation', reservationId, reservationData);
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Reservation deleted successfully'),
                     backgroundColor: Colors.green,
                   ),
@@ -515,8 +498,8 @@ class _ReservationPageState extends State<ReservationPage> {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Container(
-          padding: EdgeInsets.all(24),
-          constraints: BoxConstraints(maxWidth: 500),
+          padding: const EdgeInsets.all(24),
+          constraints: const BoxConstraints(maxWidth: 500),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -533,12 +516,12 @@ class _ReservationPageState extends State<ReservationPage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close),
+                      icon: const Icon(Icons.close),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
-                Divider(height: 32),
+                const Divider(height: 32),
                 _buildDetailRow('Customer', data['userEmail'] ?? 'N/A'),
                 _buildDetailRow('Reference Number', data['referenceNumber'] ?? 'N/A'),
                 _buildDetailRow('Date/Time',
@@ -546,7 +529,7 @@ class _ReservationPageState extends State<ReservationPage> {
                 _buildDetailRow('Guests', '${data['guestCount']}'),
                 _buildDetailRow('Payment Method', data['paymentMethod'] ?? 'N/A'),
                 _buildDetailRow('Total Price', 'PHP ${data['totalPrice']?.toStringAsFixed(2) ?? '0.00'}'),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Order Items',
                   style: GoogleFonts.inter(
@@ -554,7 +537,7 @@ class _ReservationPageState extends State<ReservationPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 ...(data['items'] as List<dynamic>).map((item) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
@@ -574,7 +557,7 @@ class _ReservationPageState extends State<ReservationPage> {
                     ],
                   ),
                 )),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Order Notes',
                   style: GoogleFonts.inter(
@@ -582,9 +565,9 @@ class _ReservationPageState extends State<ReservationPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
@@ -595,7 +578,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   ),
                 ),
                 if ((data['notes'] ?? '').isNotEmpty) ...[
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'Notes',
                     style: GoogleFonts.inter(
@@ -603,9 +586,9 @@ class _ReservationPageState extends State<ReservationPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
@@ -617,7 +600,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   ),
                 ],
                 if (data['status'] == 'cancelled') ...[
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'Cancellation Reason',
                     style: GoogleFonts.inter(
@@ -625,9 +608,9 @@ class _ReservationPageState extends State<ReservationPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
@@ -684,8 +667,8 @@ class _ReservationPageState extends State<ReservationPage> {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Container(
-          padding: EdgeInsets.all(24),
-          constraints: BoxConstraints(maxWidth: 500),
+          padding: const EdgeInsets.all(24),
+          constraints: const BoxConstraints(maxWidth: 500),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -697,7 +680,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: notesController,
                 maxLines: 4,
@@ -708,7 +691,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -719,7 +702,7 @@ class _ReservationPageState extends State<ReservationPage> {
                       style: GoogleFonts.inter(color: Colors.grey[600]),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: () async {
                       try {
@@ -731,7 +714,7 @@ class _ReservationPageState extends State<ReservationPage> {
                             .update({'notes': notesController.text});
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Notes updated successfully')),
+                          const SnackBar(content: Text('Notes updated successfully')),
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -819,7 +802,7 @@ class _ReservationPageState extends State<ReservationPage> {
                 await _logReservationActivity('Update Status', reservationId, reservationData);
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Reservation status updated successfully'),
                     backgroundColor: Colors.green,
                   ),
@@ -875,7 +858,7 @@ class ReservationSearchDelegate extends SearchDelegate {
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
@@ -886,7 +869,7 @@ class ReservationSearchDelegate extends SearchDelegate {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back),
       onPressed: () {
         close(context, null);
       },
@@ -908,7 +891,7 @@ class ReservationSearchDelegate extends SearchDelegate {
       stream: _restaurantDataManager.getReservationsStream(restaurantId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -916,7 +899,7 @@ class ReservationSearchDelegate extends SearchDelegate {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No reservations found.'));
+          return const Center(child: Text('No reservations found.'));
         }
 
         final reservations = snapshot.data!.docs.where((doc) {

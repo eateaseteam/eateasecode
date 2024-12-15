@@ -10,6 +10,8 @@ import 'package:http/http.dart' as http;
 import '../HomePage/home_screen_container.dart';
 
 class Splash extends StatefulWidget {
+  const Splash({super.key});
+
   @override
   _SplashState createState() => _SplashState();
 }
@@ -50,7 +52,7 @@ class _SplashState extends State<Splash> {
   Future<bool> _checkInternetAvailability() async {
     try {
       print('Attempting to check internet availability...');
-      final response = await http.get(Uri.parse('https://www.google.com')).timeout(Duration(seconds: 5));
+      final response = await http.get(Uri.parse('https://www.google.com')).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         print('Internet is available.');
@@ -83,16 +85,16 @@ class _SplashState extends State<Splash> {
 
   // Navigate to the sign-in screen
   void _navigateToSignInScreen() {
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => SignInScreen()),
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
       );
     });
   }
 
   // Navigate to the home screen with user data
   void _navigateToHomeScreen(String email) {
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => HomeScreenContainer(email: email)), // Pass the email to HomeScreenContainer
       );
@@ -109,7 +111,7 @@ class _SplashState extends State<Splash> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Container(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -122,13 +124,13 @@ class _SplashState extends State<Splash> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Please connect to the internet and try again.',
                   style: GoogleFonts.poppins(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [

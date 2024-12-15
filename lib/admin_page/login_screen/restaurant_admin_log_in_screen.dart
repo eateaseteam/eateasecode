@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
 
 class RestaurantAdminLoginPage extends StatefulWidget {
+  const RestaurantAdminLoginPage({super.key});
+
   @override
   _RestaurantAdminLoginPageState createState() =>
       _RestaurantAdminLoginPageState();
@@ -66,7 +68,7 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
       } else {
         // No restaurant found for this user (UID mismatch or no restaurant)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('No restaurant found for this user. Please check your credentials.'),
             backgroundColor: Colors.red,
           ),
@@ -136,7 +138,7 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
                     borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
                   ),
                   prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[600]),
-                  contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
                 ),
               ),
               const SizedBox(height: 16.0),
@@ -175,7 +177,7 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
                       });
                     },
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
                 ),
               ),
               const SizedBox(height: 32.0),
@@ -184,7 +186,7 @@ class _RestaurantAdminLoginPageState extends State<RestaurantAdminLoginPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[600],
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
                   ),

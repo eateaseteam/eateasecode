@@ -3,12 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../admin_dashboard_screen/admin_dashboard_screen.dart'; // Import admin screen
+// Import admin screen
 import '../admin_home_screen_page/admin_home_screen_page.dart';
 import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
 import 'log_in_as_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen({super.key});
+
   @override
   _WelcomeScreenState createState() => _WelcomeScreenState();
 }
@@ -17,7 +19,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 3), _navigateToNextScreen);
+    Future.delayed(const Duration(seconds: 3), _navigateToNextScreen);
   }
 
   @override
@@ -29,7 +31,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         child: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -42,9 +44,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildLogo(),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   _buildWelcomeText(),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildDescription(),
                 ],
               ),
@@ -66,7 +68,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -109,7 +111,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Widget _buildDescription() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Text(
         "Streamline your restaurant operations with our all-in-one booking and services management solution.",
         textAlign: TextAlign.center,
@@ -166,7 +168,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           await FirebaseAuth.instance.signOut();
           _showErrorSnackBar("No matching data found. Logging out.");
           print("No matching data for user: ${user.uid}. Logging out.");
-          _navigateTo(LoginAsScreen());
+          _navigateTo(const LoginAsScreen());
         }
       } catch (e) {
         _showErrorSnackBar("Error fetching user data: $e");
@@ -174,7 +176,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
     } else {
       print("User is not logged in. Navigating to login page.");
-      _navigateTo(LoginAsScreen());
+      _navigateTo(const LoginAsScreen());
     }
   }
 
@@ -197,7 +199,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ),
         backgroundColor: Colors.green[600],
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -217,7 +219,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ),
         backgroundColor: Colors.red[600],
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),

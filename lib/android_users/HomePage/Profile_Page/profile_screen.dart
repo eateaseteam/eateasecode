@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -15,7 +14,7 @@ import 'privacy_and_policy.dart';
 class ProfileScreen extends StatefulWidget {
   final String email;
 
-  const ProfileScreen({required this.email, Key? key}) : super(key: key);
+  const ProfileScreen({required this.email, super.key});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -58,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'We will send a password reset link to your registered email.',
                 style: GoogleFonts.poppins(fontSize: 16),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 currentUserEmail, // Display the current user's email
                 style: GoogleFonts.poppins(
@@ -85,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Password reset email sent. Check your inbox.'),
                       backgroundColor: Colors.green,
                     ),
@@ -165,13 +164,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // Navigate to the SignInScreen
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => SignInScreen()),
+                            MaterialPageRoute(builder: (context) => const SignInScreen()),
                                 (route) => false, // Remove all previous routes
                           );
                         } catch (e) {
                           print('Logout failed: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               content: Text('Logout failed. Please try again.'),
                               backgroundColor: Colors.red,
                             ),
@@ -218,10 +217,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           profileImageUrl = downloadUrl;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile picture updated successfully.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile picture updated successfully.')));
       } catch (e) {
         print('Error uploading image: $e');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating profile picture.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error updating profile picture.')));
       }
     }
   }
@@ -249,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 radius: 100,
                 backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
                     ? NetworkImage(profileImageUrl)
-                    : AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
+                    : const AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
               ),
             ],
           ),
@@ -275,12 +274,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profile updated successfully')),
+        const SnackBar(content: Text('Profile updated successfully')),
       );
     } catch (e) {
       print('Error updating profile: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profile')),
+        const SnackBar(content: Text('Error updating profile')),
       );
     }
   }
@@ -319,11 +318,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         stream: FirebaseFirestore.instance.collection('users').doc(widget.email).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text("No user data found."));
+            return const Center(child: Text("No user data found."));
           }
 
           final userDoc = snapshot.data!;
@@ -338,15 +337,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           return SingleChildScrollView(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildProfileHeader(fullName: fullName, email: userEmail),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 if (_isEditing) ...[
                   _buildEditProfileForm(),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Center(
                     child: ElevatedButton(
                       onPressed: _updateProfile,
@@ -355,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       ),
                       child: Text(
                         'Save Changes',
@@ -367,7 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                 ] else ...[
                   _buildProfileItem(
                     icon: Icons.payment,
@@ -376,40 +375,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _showGcashDialog(context);
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   _buildProfileItem(
                     icon: Icons.privacy_tip,
                     title: 'Privacy & Policy',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
+                        MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
                       );
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   _buildProfileItem(
                     icon: Icons.help_outline,
                     title: 'FAQs',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => FAQScreen()),
+                        MaterialPageRoute(builder: (context) => const FAQScreen()),
                       );
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   _buildProfileItem(
                     icon: Icons.info_outline,
                     title: 'About',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => AboutUsScreen()),
+                        MaterialPageRoute(builder: (context) => const AboutUsScreen()),
                       );
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   _buildProfileItem(
                     icon: Icons.lock_reset,
                     title: 'Reset Password',
@@ -417,7 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
                 if (!_isEditing) ...[
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   Center(
                     child: ElevatedButton(
                       onPressed: () => _logout(context),
@@ -426,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       ),
                       child: Text(
                         'Logout',
@@ -456,7 +455,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Container(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -469,24 +468,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Image.asset(
                   'lib/assets/app_images/gcash-logo.png', // Ensure this path is correct
                   height: 100,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Use GCash for your payments.',
                   style: GoogleFonts.poppins(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   'With GCash, you can easily pay for your purchases and services online. It offers a fast and secure way to manage your transactions without the need for cash.',
                   style: GoogleFonts.poppins(fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context), // Close dialog
                   style: ElevatedButton.styleFrom(
@@ -510,7 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileHeader({required String fullName, required String email}) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -518,7 +517,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 12,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -533,7 +532,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   radius: 40,
                   backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
                       ? NetworkImage(profileImageUrl!)
-                      : AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
+                      : const AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
                 ),
               ),
               Positioned(
@@ -549,12 +548,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
                           blurRadius: 6,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    padding: EdgeInsets.all(4),
-                    child: Icon(
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
                       Icons.camera_alt,
                       color: Colors.orange,
                       size: 20,
@@ -564,7 +563,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,7 +576,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   email,
                   style: GoogleFonts.poppins(
@@ -602,7 +601,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -610,7 +609,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -621,7 +620,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.black,
               size: 24,
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Text(
               title,
               style: GoogleFonts.poppins(
@@ -630,7 +629,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Colors.black,
               ),
             ),
-            Spacer(),
+            const Spacer(),
             Icon(
               Icons.chevron_right,
               color: Colors.grey[600],
@@ -644,7 +643,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildEditProfileForm() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -652,7 +651,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 12,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -667,7 +666,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.black,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           TextFormField(
             controller: _firstNameController,
             decoration: InputDecoration(
@@ -679,14 +678,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.deepOrange),
+                borderSide: const BorderSide(color: Colors.deepOrange),
               ),
               filled: true,
               fillColor: Colors.grey[100],
             ),
             style: GoogleFonts.poppins(),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           TextFormField(
             controller: _lastNameController,
             decoration: InputDecoration(
@@ -698,7 +697,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.deepOrange),
+                borderSide: const BorderSide(color: Colors.deepOrange),
               ),
               filled: true,
               fillColor: Colors.grey[100],

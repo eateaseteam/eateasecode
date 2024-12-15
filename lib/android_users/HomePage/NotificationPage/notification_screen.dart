@@ -9,7 +9,7 @@ class NotificationScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  NotificationScreen({Key? key}) : super(key: key);
+  NotificationScreen({super.key});
 
   Stream<List<DocumentSnapshot>> _getNotifications() {
     final userId = _auth.currentUser!.uid;
@@ -30,12 +30,12 @@ class NotificationScreen extends StatelessWidget {
 
     return Card(
       elevation: 2,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => _showNotificationDetails(context, document),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -56,7 +56,7 @@ class NotificationScreen extends StatelessWidget {
                   _buildStatusChip(status),
                 ],
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 DateFormat('MMMM d, y - h:mm a').format(reservationDateTime),
                 style: GoogleFonts.poppins(
@@ -64,7 +64,7 @@ class NotificationScreen extends StatelessWidget {
                   color: Colors.grey[600],
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'PHP ${totalPrice.toStringAsFixed(2)}',
                 style: GoogleFonts.poppins(
@@ -73,7 +73,7 @@ class NotificationScreen extends StatelessWidget {
                   color: Theme.of(context).primaryColor,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 timeago.format(reservationDateTime),
                 style: GoogleFonts.poppins(
@@ -130,7 +130,7 @@ class NotificationScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => DraggableScrollableSheet(
@@ -153,14 +153,14 @@ class NotificationScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   _buildDetailRow('Restaurant', data['restaurantName'] ?? 'Unknown'),
                   _buildDetailRow('Date', DateFormat('MMMM d, y').format((data['reservationDateTime'] as Timestamp).toDate())),
                   _buildDetailRow('Time', DateFormat('h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
                   _buildDetailRow('Status', (data['status'] as String?)?.capitalize() ?? 'Unknown'),
                   _buildDetailRow('Guests', (data['guestCount'] ?? 0).toString()),
                   _buildDetailRow('Total Price', 'PHP ${(data['totalPrice'] as double?)?.toStringAsFixed(2) ?? '0.00'}'),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'Order Items',
                     style: GoogleFonts.poppins(
@@ -168,7 +168,7 @@ class NotificationScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   ..._buildOrderItems(data['items'] as List<dynamic>? ?? []),
                 ],
               ),
@@ -247,7 +247,7 @@ class NotificationScreen extends StatelessWidget {
         stream: _getNotifications(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -280,7 +280,7 @@ class NotificationScreen extends StatelessWidget {
 
 extension StringExtension on String {
   String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
 

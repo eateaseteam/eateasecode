@@ -6,6 +6,8 @@ import '../login_screen/admin_login_screen.dart';
 import '../login_screen/restaurant_admin_log_in_screen.dart';
 
 class LoginAsScreen extends StatefulWidget {
+  const LoginAsScreen({super.key});
+
   @override
   _LoginAsScreenState createState() => _LoginAsScreenState();
 }
@@ -26,7 +28,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
       // Navigate to AdminLoginPage
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AdminLoginPage()),
+        MaterialPageRoute(builder: (context) => const AdminLoginPage()),
       );
     }
     else {
@@ -40,7 +42,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => RestaurantAdminLoginPage()),
+        MaterialPageRoute(builder: (context) => const RestaurantAdminLoginPage()),
       );
     }
   }
@@ -62,8 +64,8 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 60),
-                    Text(
+                    const SizedBox(height: 60),
+                    const Text(
                       'Welcome to\nEatease',
                       style: TextStyle(
                         fontSize: 40,
@@ -71,7 +73,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
                         color: Colors.black,
                       ),
                     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
                       'Streamline your restaurant operations with our all-in-one booking and services management solution.',
                       style: TextStyle(
@@ -79,7 +81,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
                         color: Colors.black.withOpacity(0.7),
                       ),
                     ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.2, end: 0),
-                    SizedBox(height: 60),
+                    const SizedBox(height: 60),
                     _buildLoginCard(),
                   ],
                 ),
@@ -93,7 +95,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
 
   Widget _buildLoginCard() {
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -101,14 +103,14 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Log in as',
             style: TextStyle(
               fontSize: 24,
@@ -116,9 +118,9 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildRoleSelection(),
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           _buildSignInButton(),
         ],
       ),
@@ -129,7 +131,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
     return Row(
       children: [
         _buildRoleOption(0, 'Admin', Icons.admin_panel_settings, Colors.blue),
-        SizedBox(width: 20),
+        const SizedBox(width: 20),
         _buildRoleOption(1, 'Restaurant Admin', Icons.restaurant, Colors.blue),
       ],
     );
@@ -141,7 +143,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
       child: GestureDetector(
         onTap: () => setState(() => _selectedRole = value),
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
             color: isSelected ? color.withOpacity(0.2) : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12),
@@ -157,7 +159,7 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
                 size: 40,
                 color: isSelected ? color : Colors.grey,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
@@ -178,19 +180,19 @@ class _LoginAsScreenState extends State<LoginAsScreen> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _signIn,
-        child: Text(
-          "SIGN IN",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Text(
+          "SIGN IN",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

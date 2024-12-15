@@ -11,11 +11,11 @@ class AddEditMenuItemPage extends StatefulWidget {
   final Map<String, dynamic>? item;
 
   const AddEditMenuItemPage({
-    Key? key,
+    super.key,
     required this.userId,
     this.docId,
     this.item,
-  }) : super(key: key);
+  });
 
   @override
   _AddEditMenuItemPageState createState() => _AddEditMenuItemPageState();
@@ -193,7 +193,7 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                 top: 10,
                 right: 10,
                 child: IconButton(
-                  icon: Icon(Icons.close, color: Colors.white),
+                  icon: const Icon(Icons.close, color: Colors.white),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -250,23 +250,23 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _pickImage,
-                icon: Icon(Icons.add_a_photo, color: Colors.white), // Ensure the icon color is white
-                label: Text(
+                icon: const Icon(Icons.add_a_photo, color: Colors.white), // Ensure the icon color is white
+                label: const Text(
                   'Select Image',
                   style: TextStyle(color: Colors.white), // Set text color to white
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _menuItemController,
                 decoration: InputDecoration(
@@ -278,7 +278,7 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                   fillColor: Colors.grey[100],
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
                 decoration: InputDecoration(
@@ -289,9 +289,9 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                   filled: true,
                   fillColor: Colors.grey[100],
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
@@ -304,7 +304,7 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                 ),
                 maxLines: 3,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedType,
                 decoration: InputDecoration(
@@ -320,11 +320,18 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                     .toList(),
                 onChanged: (value) => setState(() => _selectedType = value!),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isUploading ? null : _saveMenuItem,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 child: _isUploading
-                    ? SizedBox(
+                    ? const SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
@@ -334,16 +341,9 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                 )
                     : Text(
                   widget.docId == null ? 'Add Menu Item' : 'Update Menu Item',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.white, // Set text color to white
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),

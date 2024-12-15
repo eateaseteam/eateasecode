@@ -6,6 +6,8 @@ import 'package:intl/intl.dart'; // Add this for date formatting
 import '../admin_home_screen_page/admin_home_screen_page.dart';
 
 class AdminLoginPage extends StatefulWidget {
+  const AdminLoginPage({super.key});
+
   @override
   _AdminLoginPageState createState() => _AdminLoginPageState();
 }
@@ -146,7 +148,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[600],
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
                   ),
@@ -199,7 +201,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         ),
         prefixIcon: Icon(prefixIcon, color: Colors.grey[600]),
         suffixIcon: suffixIcon,
-        contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
       ),
     );
   }

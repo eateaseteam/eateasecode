@@ -7,7 +7,7 @@ import 'package:rxdart/rxdart.dart';
 class RecentActivityPage extends StatefulWidget {
   final String restaurantId;
 
-  const RecentActivityPage({Key? key, required this.restaurantId}) : super(key: key);
+  const RecentActivityPage({super.key, required this.restaurantId});
 
   @override
   _RecentActivityPageState createState() => _RecentActivityPageState();
@@ -34,9 +34,9 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
                 color: Colors.orange[900],
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             _buildSearchAndFilterBar(),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Expanded(
               child: _buildActivityList(),
             ),
@@ -61,12 +61,12 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: EdgeInsets.symmetric(vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(vertical: 15),
             ),
             onChanged: (value) => setState(() {}),
           ),
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         DropdownButton<String>(
           value: _selectedLogType,
           items: ['All', 'Menu', 'Reservation', 'Reservation History', 'Login', 'Logout'].map((String value) {
@@ -81,7 +81,7 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
             });
           },
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         IconButton(
           icon: Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward),
           onPressed: () {
@@ -100,7 +100,7 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
       stream: _getActivityStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: Colors.orange));
+          return const Center(child: CircularProgressIndicator(color: Colors.orange));
         }
 
         if (snapshot.hasError) {
@@ -108,7 +108,7 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No activities found.'));
+          return const Center(child: Text('No activities found.'));
         }
 
         var activities = snapshot.data!;
@@ -256,13 +256,13 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
 class ActivityItem extends StatelessWidget {
   final Map<String, dynamic> activity;
 
-  const ActivityItem({Key? key, required this.activity}) : super(key: key);
+  const ActivityItem({super.key, required this.activity});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -292,7 +292,7 @@ class ActivityItem extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             ..._getActivityDetails(),
           ],
         ),
@@ -426,7 +426,7 @@ class ActivityItem extends StatelessWidget {
           color: Colors.black,  // Set text color to black
         ),
       ),
-      SizedBox(height: 8),
+      const SizedBox(height: 8),
       Text('Reservation ID: ${activity['reservationId'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
       Text('User Email: ${activity['userEmail'] ?? 'N/A'}',
@@ -443,7 +443,7 @@ class ActivityItem extends StatelessWidget {
           style: GoogleFonts.inter(fontSize: 14)),
       Text('New Status: ${activity['status'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
-      SizedBox(height: 4),
+      const SizedBox(height: 4),
       Text('Performed By: ${activity['performedBy'] ?? 'Unknown'}',
           style: GoogleFonts.inter(
             fontSize: 14,
@@ -463,7 +463,7 @@ class ActivityItem extends StatelessWidget {
           color: Colors.black,  // Set text color to black
         ),
       ),
-      SizedBox(height: 8),
+      const SizedBox(height: 8),
       Text('Reservation ID: ${activity['reservationId'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
       Text('User Email: ${activity['userEmail'] ?? 'N/A'}',
@@ -478,7 +478,7 @@ class ActivityItem extends StatelessWidget {
           style: GoogleFonts.inter(fontSize: 14)),
       Text('Reference Number: ${activity['referenceNumber'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
-      SizedBox(height: 4),
+      const SizedBox(height: 4),
       Text('Performed By: ${activity['performedBy'] ?? 'Unknown'}',
           style: GoogleFonts.inter(
             fontSize: 14,
@@ -507,7 +507,7 @@ class ActivityItem extends StatelessWidget {
           color: Colors.black,
         ),
       ),
-      SizedBox(height: 8),
+      const SizedBox(height: 8),
       ...details.map((detail) {
         if (detail.startsWith('Performed By:')) {
           return Text(
@@ -551,13 +551,13 @@ class ActivityItem extends StatelessWidget {
           color: Colors.black,
         ),
       ),
-      SizedBox(height: 8),
+      const SizedBox(height: 8),
       ...details.entries.where((entry) => entry.key != 'Performed By').map((entry) {
         return Text(
           '${entry.key}: ${entry.value}',
           style: GoogleFonts.inter(fontSize: 14),
         );
-      }).toList(),
+      }),
       if (performedBy != null) performedBy, // Add "Performed By" at the bottom
     ];
   }

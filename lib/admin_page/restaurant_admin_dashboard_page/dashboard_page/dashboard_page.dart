@@ -9,7 +9,7 @@ class DashboardPage extends StatelessWidget {
   final RestaurantDataManager _dataManager = RestaurantDataManager();
   final String restaurantId;
 
-  DashboardPage({Key? key, required this.restaurantId}) : super(key: key);
+  DashboardPage({super.key, required this.restaurantId});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class DashboardPage extends StatelessWidget {
       stream: _dataManager.getReservationsStream(restaurantId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -25,7 +25,7 @@ class DashboardPage extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No reservations found'));
+          return const Center(child: Text('No reservations found'));
         }
 
         List<DocumentSnapshot> reservations = snapshot.data!.docs;
@@ -43,9 +43,9 @@ class DashboardPage extends StatelessWidget {
                   color: Colors.grey[800],
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _buildStatusCards(reservations),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               _buildOrdersByTypeChart(reservations),
             ],
           ),
@@ -58,9 +58,9 @@ class DashboardPage extends StatelessWidget {
     Map<String, int> counts = _getReservationCounts(reservations);
 
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: 4,
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       childAspectRatio: 3,
@@ -103,7 +103,7 @@ class DashboardPage extends StatelessWidget {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -115,7 +115,7 @@ class DashboardPage extends StatelessWidget {
             backgroundColor: color.withOpacity(0.1),
             child: Icon(icon, color: color, size: 18),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -147,7 +147,7 @@ class DashboardPage extends StatelessWidget {
     Map<String, double> typeData = _getOrdersByType(reservations);
 
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -156,7 +156,7 @@ class DashboardPage extends StatelessWidget {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 2,
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -171,8 +171,8 @@ class DashboardPage extends StatelessWidget {
               color: Colors.grey[800],
             ),
           ),
-          SizedBox(height: 24),
-          Container(
+          const SizedBox(height: 24),
+          SizedBox(
             height: 300,
             child: BarChart(
               BarChartData(
@@ -218,7 +218,7 @@ class DashboardPage extends StatelessWidget {
                             ),
                           );
                         }
-                        return Text('');
+                        return const Text('');
                       },
                     ),
                   ),
@@ -234,8 +234,8 @@ class DashboardPage extends StatelessWidget {
                       },
                     ),
                   ),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: FlGridData(
                   show: true,

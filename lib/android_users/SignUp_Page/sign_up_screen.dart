@@ -10,6 +10,8 @@ import '../../SignIn_Page/sign_in_screen.dart';
 import '../../assets/constants.dart';
 
 class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }
@@ -120,7 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             elevation: 0,
                           ),
                           child: _isLoading
-                              ? SizedBox(
+                              ? const SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
@@ -152,10 +154,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     color: Colors.black54,
                   ),
                   children: [
-                    TextSpan(text: 'Already have an account? '),
+                    const TextSpan(text: 'Already have an account? '),
                     TextSpan(
                       text: 'Sign in',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: EateaseAppColors.orange,
                         fontWeight: FontWeight.w600,
                       ),
@@ -163,7 +165,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ..onTap = () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => SignInScreen()),
+                            MaterialPageRoute(builder: (context) => const SignInScreen()),
                           );
                         },
                     ),
@@ -201,7 +203,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         suffixIcon: isPassword
             ? IconButton(
           icon: Icon(
@@ -275,7 +277,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _showToast("Account created successfully", Colors.green);
 
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => SignInScreen()),
+            MaterialPageRoute(builder: (context) => const SignInScreen()),
           );
         } on FirebaseAuthException catch (e) {
           _showToast(e.message ?? 'Error occurred', Colors.red);

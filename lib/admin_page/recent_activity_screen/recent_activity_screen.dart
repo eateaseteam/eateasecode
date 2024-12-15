@@ -6,6 +6,8 @@ import 'package:rxdart/rxdart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class RecentActivityScreen extends StatefulWidget {
+  const RecentActivityScreen({super.key});
+
   @override
   _RecentActivityScreenState createState() => _RecentActivityScreenState();
 }
@@ -33,9 +35,9 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
                 color: Colors.indigo[900],
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             _buildSearchAndFilterBar(),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Expanded(child: _buildActivityList()),
           ],
         ),
@@ -58,12 +60,12 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: EdgeInsets.symmetric(vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(vertical: 15),
             ),
             onChanged: (value) => setState(() {}),
           ),
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         DropdownButton<String>(
           value: _selectedLogType,
           items: ['All', 'Admin', 'Customer', 'Restaurant'].map((String value) {
@@ -78,7 +80,7 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
             });
           },
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         IconButton(
           icon: Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward),
           onPressed: () {
@@ -97,7 +99,7 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
       stream: _getActivityStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -105,7 +107,7 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No activities found.'));
+          return const Center(child: Text('No activities found.'));
         }
 
         var activities = snapshot.data!;
@@ -255,13 +257,13 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
 class ActivityItem extends StatelessWidget {
   final Map<String, dynamic> activity;
 
-  const ActivityItem({Key? key, required this.activity}) : super(key: key);
+  const ActivityItem({super.key, required this.activity});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -290,9 +292,9 @@ class ActivityItem extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             _buildDetailsWidget(activity['details']),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Performed by: ${activity['performedBy'] ?? 'Unknown'}',
               style: GoogleFonts.inter(

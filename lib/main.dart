@@ -66,10 +66,10 @@ class MyApp extends StatelessWidget {
       title: 'EatEase',
       debugShowCheckedModeBanner: false,
       home: kIsWeb
-          ? WelcomeScreen() // Use web-specific screen
+          ? const WelcomeScreen() // Use web-specific screen
           : (Platform.isAndroid
-          ? Splash() // Android-specific screen
-          : WelcomeScreen()), // Default fallback
+          ? const Splash() // Android-specific screen
+          : const WelcomeScreen()), // Default fallback
     );
   }
 }

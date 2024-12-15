@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
+  const PrivacyPolicyScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Privacy and Policy', style: TextStyle(color: Colors.black)),
+          title: const Text('Privacy and Policy', style: TextStyle(color: Colors.black)),
           backgroundColor: Colors.white,
           elevation: 0,
-          bottom: TabBar(
+          bottom: const TabBar(
             indicatorColor: Colors.black,
             labelColor: Colors.black,
             unselectedLabelColor: Colors.grey,
@@ -20,11 +22,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [
             // Privacy Tab Content
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -44,7 +46,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             ),
             // Policy Tab Content
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

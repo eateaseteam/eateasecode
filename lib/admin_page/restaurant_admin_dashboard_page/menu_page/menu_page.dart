@@ -7,7 +7,7 @@ import 'add_edit_menu_item_page.dart';
 class MenuPage extends StatefulWidget {
   final String userId;
 
-  const MenuPage({Key? key, required this.userId}) : super(key: key);
+  const MenuPage({super.key, required this.userId});
 
   @override
   _MenuPageState createState() => _MenuPageState();
@@ -131,15 +131,15 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToAddEditMenuItemPage(),
-        child: Icon(Icons.add),
         backgroundColor: Colors.orange,
+        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -147,7 +147,7 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -162,7 +162,7 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
               color: Colors.orange,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           TabBar(
             controller: _tabController,
             isScrollable: true,
@@ -187,17 +187,17 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No items in this type'));
+          return const Center(child: Text('No items in this type'));
         }
 
         return GridView.builder(
-          padding: EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
             childAspectRatio: 0.75,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
@@ -223,14 +223,14 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
           AspectRatio(
             aspectRatio: 1,
             child: ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 item['image'],
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[300],
-                    child: Icon(Icons.error, color: Colors.red, size: 30),
+                    child: const Icon(Icons.error, color: Colors.red, size: 30),
                   );
                 },
               ),
@@ -238,7 +238,7 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(7.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -275,17 +275,17 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue, size: 20),
+                        icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
                         onPressed: () => _navigateToAddEditMenuItemPage(docId: docId, item: item),
                         padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        constraints: const BoxConstraints(),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red, size: 20),
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                         onPressed: () => _showDeleteConfirmationDialog(docId, item['name']),
                         padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
@@ -303,11 +303,11 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete Menu Item', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete this menu item?'),
+        content: const Text('Are you sure you want to delete this menu item?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -319,11 +319,11 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
                 _showSnackBar('Invalid admin password', Colors.red);
               }
             },
-            child: Text('Delete'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white, // Sets the text color to white
             ),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -332,7 +332,7 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
 
   Future<String> _showPasswordDialog() async {
     final passwordController = TextEditingController();
-    bool _obscurePassword = true;
+    bool obscurePassword = true;
 
     return await showDialog<String>(
       context: context,
@@ -342,17 +342,17 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
           builder: (context, setState) {
             return TextField(
               controller: passwordController,
-              obscureText: _obscurePassword,
+              obscureText: obscurePassword,
               decoration: InputDecoration(
                 labelText: 'Password',
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    obscurePassword ? Icons.visibility : Icons.visibility_off,
                     color: Colors.grey,
                   ),
                   onPressed: () {
                     setState(() {
-                      _obscurePassword = !_obscurePassword;
+                      obscurePassword = !obscurePassword;
                     });
                   },
                 ),
@@ -363,15 +363,15 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, ''),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, passwordController.text),
-            child: Text('Verify'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white, // Sets the text color to white
             ),
+            child: const Text('Verify'),
           ),
         ],
       ),

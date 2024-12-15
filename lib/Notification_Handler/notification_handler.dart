@@ -43,7 +43,7 @@ class NotificationHandler {
 
   // Schedule notification for 30 minutes before deadline
   Future<void> scheduleTaskReminderNotification(String taskId, String taskTitle, DateTime deadline) async {
-    final tz.TZDateTime reminderTime = tz.TZDateTime.from(deadline.subtract(Duration(minutes: 30)), tz.local);
+    final tz.TZDateTime reminderTime = tz.TZDateTime.from(deadline.subtract(const Duration(minutes: 30)), tz.local);
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'task_channel_id',

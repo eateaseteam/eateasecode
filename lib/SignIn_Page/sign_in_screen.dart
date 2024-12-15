@@ -9,6 +9,8 @@ import '../android_users/HomePage/home_screen_container.dart';
 import '../android_users/SignUp_Page/sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
+
   @override
   _SignInScreenState createState() => _SignInScreenState();
 }
@@ -116,7 +118,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => SignUpScreen()),
+                                builder: (context) => const SignUpScreen()),
                           );
                         },
                     ),

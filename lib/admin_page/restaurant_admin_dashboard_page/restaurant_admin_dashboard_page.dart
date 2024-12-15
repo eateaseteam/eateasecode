@@ -4,7 +4,6 @@ import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reser
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../recent_activity_screen/recent_activity_screen.dart';
 import '../welcome_screen/log_in_as_screen.dart';
 import 'dashboard_page/dashboard_page.dart';
 import 'menu_page/menu_page.dart';
@@ -14,7 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class RestaurantAdminDashboardPage extends StatefulWidget {
   final String userId;
 
-  RestaurantAdminDashboardPage({required this.userId});
+  const RestaurantAdminDashboardPage({super.key, required this.userId});
 
   @override
   _RestaurantAdminDashboardPageState createState() =>
@@ -71,13 +70,13 @@ class _RestaurantAdminDashboardPageState
           content: Text('Are you sure you want to log out?', style: GoogleFonts.poppins()),
           actions: [
             TextButton(
-              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
             ),
             TextButton(
-              child: Text('Logout', style: TextStyle(color: Colors.red)),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
               onPressed: () {
                 Navigator.of(context).pop(true);
               },
@@ -112,7 +111,7 @@ class _RestaurantAdminDashboardPageState
         // Navigate to login screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => LoginAsScreen()),
+          MaterialPageRoute(builder: (context) => const LoginAsScreen()),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -131,8 +130,8 @@ class _RestaurantAdminDashboardPageState
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.orange),
-        title: Text('EATEASE', style: TextStyle(color: Colors.black)),
+        iconTheme: const IconThemeData(color: Colors.orange),
+        title: const Text('EATEASE', style: TextStyle(color: Colors.black)),
         leading: IconButton(
           icon: Icon(isDrawerOpen ? Icons.menu_open : Icons.menu),
           onPressed: () {
@@ -143,7 +142,7 @@ class _RestaurantAdminDashboardPageState
         ),
         actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 16.0),
             child: Row(
               children: [
                 Divider(
@@ -151,9 +150,9 @@ class _RestaurantAdminDashboardPageState
                   height: 24,
                   thickness: 1,
                 ),
-                SizedBox(width: 8.0),
+                const SizedBox(width: 8.0),
                 _isLoading
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : Text(
                   _restaurantName.isNotEmpty
                       ? _restaurantName
@@ -178,11 +177,11 @@ class _RestaurantAdminDashboardPageState
               child: ListView(
                 children: [
                   DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.white),
+                    decoration: const BoxDecoration(color: Colors.white),
                     child: Row(
                       children: [
                         _isLoading
-                            ? CircularProgressIndicator()
+                            ? const CircularProgressIndicator()
                             : _restaurantLogoUrl.isNotEmpty
                             ? Image.network(_restaurantLogoUrl, width: 150)
                             : Image.asset(

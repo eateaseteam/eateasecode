@@ -9,7 +9,7 @@ import '../../../android_users/HomePage/RestaurantPage/restaurant_data_manager.d
 class ReservationHistoryPage extends StatefulWidget {
   final String restaurantId;
 
-  const ReservationHistoryPage({Key? key, required this.restaurantId}) : super(key: key);
+  const ReservationHistoryPage({super.key, required this.restaurantId});
 
   @override
   _ReservationHistoryPageState createState() => _ReservationHistoryPageState();
@@ -21,9 +21,9 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
   //final CollectionReference _logsCollection = FirebaseFirestore.instance.collection('reservation_history_logs');
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  final Color _primaryColor = Color(0xFF4A90E2);
-  final Color _secondaryColor = Color(0xFF5C6BC0);
-  final Color _backgroundColor = Color(0xFFF5F7FA);
+  final Color _primaryColor = const Color(0xFF4A90E2);
+  final Color _secondaryColor = const Color(0xFF5C6BC0);
+  final Color _backgroundColor = const Color(0xFFF5F7FA);
 
   Stream<QuerySnapshot> _getRecentReservationHistoryStream() {
     return FirebaseFirestore.instance
@@ -63,7 +63,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Expanded(child: _buildReservationList()),
             ],
           ),
@@ -84,7 +84,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
             color: Colors.black87,
           ),
         ),
-        Container(
+        SizedBox(
           width: 250,
           child: TextField(
             controller: _searchController,
@@ -118,7 +118,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -131,9 +131,9 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
         return ListView(
           children: [
             _buildHistorySection('This Month', _getReservationsForPeriod(filteredReservations, 0, 30)),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildHistorySection('Last Month', _getReservationsForPeriod(filteredReservations, 30, 60)),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildHistorySection('Older', _getReservationsForPeriod(filteredReservations, 60, null)),
           ],
         );
@@ -182,14 +182,13 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
-              columns: [
+              headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
+              columns: const [
                 DataColumn(label: Text('ID')),
                 DataColumn(label: Text('Customer')),
                 DataColumn(label: Text('Guests')),
                 DataColumn(label: Text('Date/Time')),
                 DataColumn(label: Text('Status')),
-                DataColumn(label: Text('Action')),
               ],
               rows: reservations.map((reservation) {
                 Map<String, dynamic> data = reservation.data() as Map<String, dynamic>;
@@ -201,19 +200,6 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                     DataCell(Text(reservationData['guestCount'].toString())),
                     DataCell(Text(DateFormat('MM/dd/yy h:mm a').format((reservationData['reservationDateTime'] as Timestamp).toDate()))),
                     DataCell(_buildStatusBadge(reservationData['status'])),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(data['action']),
-                          IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red, size: 20),
-                            onPressed: () => _confirmDeleteReservation(reservation.id), // Updated line
-                            tooltip: 'Delete',
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 );
               }).toList(),
@@ -244,7 +230,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
@@ -270,7 +256,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
           tooltip: 'View Details',
         ),
         IconButton(
-          icon: Icon(Icons.delete, color: Colors.red),
+          icon: const Icon(Icons.delete, color: Colors.red),
           onPressed: () => _confirmDeleteReservation(reservationId),
           tooltip: 'Delete',
         ),
@@ -291,7 +277,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
               return Center(child: CircularProgressIndicator(color: _primaryColor));
             }
             if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red));
+              return Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red));
             }
             if (!snapshot.hasData || !snapshot.data!.exists) {
               return Text('Reservation not found', style: TextStyle(color: Colors.grey[600]));
@@ -308,7 +294,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                   _detailItem('Date', DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
                   _detailItem('Status', data['status']),
                   _detailItem('Total Price', 'PHP ${data['totalPrice']}'),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text('Order Items', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
                   ...(data['items'] as List<dynamic>).map((item) =>
                       Padding(
@@ -322,11 +308,11 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                         ),
                       )
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text('Order Notes', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
                   Text(data['orderNotes'] ?? 'No order notes', style: GoogleFonts.poppins()),
                   if (data['status'] == 'cancelled') ...[
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text('Cancellation Reason', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(data['cancellationReason'] ?? 'No reason provided', style: GoogleFonts.poppins()),
                   ],
@@ -368,18 +354,18 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               _deleteReservation(reservationId);
             },
-            child: Text('Delete'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white, // Sets the text color to white
             ),
+            child: const Text('Delete'),
           ),
         ],
       ),

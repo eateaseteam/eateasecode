@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'restaurant_data_manager.dart';
 
 class ReservationScreen extends StatefulWidget {
+  const ReservationScreen({super.key});
+
   @override
   _ReservationScreenState createState() => _ReservationScreenState();
 }
@@ -62,11 +64,11 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
         );
       },
       child: Card(
-        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 2,
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               ClipRRect(
@@ -86,7 +88,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                   },
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +100,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       DateFormat('MMM d, yyyy - h:mm a').format(dateTime),
                       style: GoogleFonts.poppins(
@@ -106,7 +108,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                         color: Colors.grey[600],
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'PHP ${totalPrice.toStringAsFixed(2)}',
                       style: GoogleFonts.poppins(
@@ -119,15 +121,15 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                 ),
               ),
               if (status == 'completed' || status == 'approved')
-                Icon(Icons.check_circle, color: Colors.green, size: 28)
+                const Icon(Icons.check_circle, color: Colors.green, size: 28)
               else if (status == 'cancelled')
                 IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red, size: 28),
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 28),
                   onPressed: () => _confirmDelete(restaurantId, reservationId),
                 )
               else if (status == 'pending')
                   IconButton(
-                    icon: Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
+                    icon: const Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
                     onPressed: () => _showCancelDialog(context, restaurantId, reservationId),
                   ),
             ],
@@ -146,7 +148,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
             borderRadius: BorderRadius.circular(20),
           ),
           child: Container(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -159,13 +161,13 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Are you sure you want to delete this reservation?',
                   style: GoogleFonts.poppins(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -211,7 +213,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
           .doc(reservationId)
           .delete();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Reservation deleted successfully.')),
+        const SnackBar(content: Text('Reservation deleted successfully.')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -244,7 +246,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
-          tabs: [
+          tabs: const [
             Tab(text: 'Completed'),
             Tab(text: 'Pending'),
             Tab(text: 'Cancelled'),
@@ -269,7 +271,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
       stream: _getReservations(status),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
@@ -304,7 +306,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
             return Dialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               child: Container(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -322,26 +324,26 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.close, color: Colors.grey),
+                            icon: const Icon(Icons.close, color: Colors.grey),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         'Select a reason for cancellation',
                         style: GoogleFonts.poppins(fontSize: 16),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: selectedReason,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         ),
-                        hint: Text('Choose a reason'),
+                        hint: const Text('Choose a reason'),
                         isExpanded: true,
                         items: [
                           'Change of plans',
@@ -374,7 +376,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                             ),
                           ),
                         ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -390,7 +392,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                               );
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Reservation cancelled successfully.')),
+                                const SnackBar(content: Text('Reservation cancelled successfully.')),
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -400,7 +402,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.deepOrange,
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -431,13 +433,13 @@ class ReservationDetailsScreen extends StatelessWidget {
   final String reservationId;
   final String restaurantId;
 
-  ReservationDetailsScreen({required this.reservationId, required this.restaurantId});
+  const ReservationDetailsScreen({super.key, required this.reservationId, required this.restaurantId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reservation Details'),
+        title: const Text('Reservation Details'),
         backgroundColor: Colors.deepOrange,
       ),
       body: FutureBuilder<DocumentSnapshot>(
@@ -449,13 +451,13 @@ class ReservationDetailsScreen extends StatelessWidget {
             .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('Reservation not found'));
+            return const Center(child: Text('Reservation not found'));
           }
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final restaurantName = data['restaurantName'] ?? 'Unknown Restaurant';
@@ -467,7 +469,7 @@ class ReservationDetailsScreen extends StatelessWidget {
           final cancellationReason = data['cancellationReason'] as String? ?? 'Not specified';
 
           return SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -475,7 +477,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                   restaurantName,
                   style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   'Date: ${DateFormat('MMM d, yyyy - h:mm a').format(dateTime)}',
                   style: GoogleFonts.poppins(fontSize: 16),
@@ -493,7 +495,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                   'Total: PHP ${totalPrice.toStringAsFixed(2)}',
                   style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.deepOrange),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Ordered Items:',
                   style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
@@ -506,7 +508,7 @@ class ReservationDetailsScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 )),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Order Notes:',
                   style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),

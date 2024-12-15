@@ -9,7 +9,7 @@ import 'restaurant_data_manager.dart';
 class RestaurantDetailsScreen extends StatefulWidget {
   final String restaurantId;
 
-  const RestaurantDetailsScreen({Key? key, required this.restaurantId}) : super(key: key);
+  const RestaurantDetailsScreen({super.key, required this.restaurantId});
 
   @override
   _RestaurantDetailsScreenState createState() => _RestaurantDetailsScreenState();
@@ -23,7 +23,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
 
   Map<String, dynamic>? _restaurant;
   List<Map<String, dynamic>> _menuItems = [];
-  Map<String, Map<String, dynamic>> _cartItems = {};
+  final Map<String, Map<String, dynamic>> _cartItems = {};
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   int _guestCount = 1;
@@ -54,13 +54,13 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load restaurant data')),
+          const SnackBar(content: Text('Failed to load restaurant data')),
         );
       }
     } catch (e) {
       print('Error loading restaurant data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while loading restaurant data')),
+        const SnackBar(content: Text('An error occurred while loading restaurant data')),
       );
     }
   }
@@ -143,7 +143,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -175,7 +175,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select a future time')),
+          const SnackBar(content: Text('Please select a future time')),
         );
       }
     }
@@ -184,32 +184,32 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
   bool _validateBooking() {
     if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a date')),
+        const SnackBar(content: Text('Please select a date')),
       );
       return false;
     }
     if (_selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a time')),
+        const SnackBar(content: Text('Please select a time')),
       );
       return false;
     }
     if (_cartItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please add items to your cart')),
+        const SnackBar(content: Text('Please add items to your cart')),
       );
       return false;
     }
     if (_paymentMethod == 'GCash') {
       if (_referenceNumber.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please enter the GCash reference number')),
+          const SnackBar(content: Text('Please enter the GCash reference number')),
         );
         return false;
       }
       if (!RegExp(r'^\d+$').hasMatch(_referenceNumber)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('GCash reference number should only contain digits')),
+          const SnackBar(content: Text('GCash reference number should only contain digits')),
         );
         return false;
       }
@@ -227,7 +227,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
       }
 
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
-      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+      final userData = userDoc.data() ?? {};
 
       final reservationData = {
         'userId': user.uid,
@@ -293,7 +293,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
   @override
   Widget build(BuildContext context) {
     if (_restaurant == null) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -331,7 +331,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                   ),
                   labelColor: Colors.black,
                   unselectedLabelColor: Colors.grey,
-                  tabs: [
+                  tabs: const [
                     Tab(text: 'Menu'),
                     Tab(text: 'About'),
                   ],
@@ -360,8 +360,8 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          Icon(Icons.location_on, color: Colors.grey),
-          SizedBox(width: 8),
+          const Icon(Icons.location_on, color: Colors.grey),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               _restaurant?['address'] ?? 'Address not available',
@@ -378,7 +378,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
 
   Widget _buildMenuContent() {
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       itemCount: _menuItems.length,
       itemBuilder: (context, index) {
         final item = _menuItems[index];
@@ -390,7 +390,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
   Widget _buildMenuItem(Map<String, dynamic> item) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -404,7 +404,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,7 +425,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'PHP ${(item['price'] as num).toStringAsFixed(2)}',
                     style: GoogleFonts.poppins(
@@ -438,7 +438,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
               ),
             ),
             IconButton(
-              icon: Icon(Icons.add_circle, color: Colors.deepOrange),
+              icon: const Icon(Icons.add_circle, color: Colors.deepOrange),
               onPressed: () => _addToCart(item),
             ),
           ],
@@ -460,7 +460,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             _restaurant?['about'] ?? 'No information available',
             style: GoogleFonts.poppins(
@@ -468,7 +468,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Opening Hours',
             style: GoogleFonts.poppins(
@@ -476,7 +476,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             _restaurant?['openingHours'] ?? 'Opening hours not available',
             style: GoogleFonts.poppins(
@@ -491,8 +491,8 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
 
   Widget _buildBottomBar() {
     return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
@@ -516,7 +516,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
             onPressed: _showBookingModal,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepOrange,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -544,8 +544,8 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Container(
-              padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
                 boxShadow: [
@@ -569,7 +569,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                         color: Colors.deepOrange,
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(
@@ -578,46 +578,46 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                               await _selectDate(context);
                               setModalState(() {});
                             },
-                            child: Text(
-                              _selectedDate == null
-                                  ? 'Select Date'
-                                  : DateFormat('MM/dd/yy').format(_selectedDate!),
-                              style: TextStyle(color: Colors.deepOrange),
-                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              side: BorderSide(color: Colors.deepOrange),
+                              side: const BorderSide(color: Colors.deepOrange),
+                            ),
+                            child: Text(
+                              _selectedDate == null
+                                  ? 'Select Date'
+                                  : DateFormat('MM/dd/yy').format(_selectedDate!),
+                              style: const TextStyle(color: Colors.deepOrange),
                             ),
                           ),
                         ),
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
                               await _selectTime(context);
                               setModalState(() {});
                             },
-                            child: Text(
-                              _selectedTime == null
-                                  ? 'Select Time'
-                                  : _selectedTime!.format(context),
-                              style: TextStyle(color: Colors.deepOrange),
-                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              side: BorderSide(color: Colors.deepOrange),
+                              side: const BorderSide(color: Colors.deepOrange),
+                            ),
+                            child: Text(
+                              _selectedTime == null
+                                  ? 'Select Time'
+                                  : _selectedTime!.format(context),
+                              style: const TextStyle(color: Colors.deepOrange),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
                       'Number of Guests:',
                       style: GoogleFonts.poppins(
@@ -628,7 +628,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                     Row(
                       children: [
                         IconButton(
-                          icon: Icon(Icons.remove, color: Colors.deepOrange),
+                          icon: const Icon(Icons.remove, color: Colors.deepOrange),
                           onPressed: () {
                             if (_guestCount > 1) {
                               setModalState(() => _guestCount--);
@@ -640,14 +640,14 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                           style: GoogleFonts.poppins(fontSize: 20),
                         ),
                         IconButton(
-                          icon: Icon(Icons.add, color: Colors.deepOrange),
+                          icon: const Icon(Icons.add, color: Colors.deepOrange),
                           onPressed: () {
                             setModalState(() => _guestCount++);
                           },
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
                       'Order Summary',
                       style: GoogleFonts.poppins(
@@ -655,12 +655,12 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Column(
                       children: _cartItems.entries.map((entry) {
                         final item = entry.value;
                         return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8),
+                          margin: const EdgeInsets.symmetric(vertical: 8),
                           elevation: 2,
                           child: ListTile(
                             leading: ClipRRect(
@@ -687,7 +687,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.remove, color: Colors.deepOrange),
+                                  icon: const Icon(Icons.remove, color: Colors.deepOrange),
                                   onPressed: () => setModalState(() => _removeFromCart(item['name'])),
                                 ),
                                 Text(
@@ -695,11 +695,11 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                                   style: GoogleFonts.poppins(fontSize: 16),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.add, color: Colors.deepOrange),
+                                  icon: const Icon(Icons.add, color: Colors.deepOrange),
                                   onPressed: () => setModalState(() => _addToCart(item)),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () => setModalState(() => _deleteFromCart(item['name'])),
                                 ),
                               ],
@@ -708,7 +708,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     // Add the new TextField for order notes
                     TextField(
                       decoration: InputDecoration(
@@ -719,7 +719,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.deepOrange),
+                          borderSide: const BorderSide(color: Colors.deepOrange),
                         ),
                       ),
                       maxLines: 3,
@@ -729,7 +729,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                         });
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -750,7 +750,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
                       'Payment Method:',
                       style: GoogleFonts.poppins(
@@ -766,8 +766,8 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                             width: 24,
                             height: 24,
                           ),
-                          SizedBox(width: 8),
-                          Text('GCash'),
+                          const SizedBox(width: 8),
+                          const Text('GCash'),
                         ],
                       ),
                       value: 'GCash',
@@ -797,13 +797,13 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                               color: Colors.deepOrange,
                             ),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           TextField(
                             decoration: InputDecoration(
                               labelText: 'GCash Reference Number',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: const BorderSide(color: Colors.deepOrange),
                               ),
                             ),
                             keyboardType: TextInputType.number,
@@ -815,7 +815,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                           ),
                         ],
                       ),
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -823,16 +823,16 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
                           _bookTable();
                           Navigator.pop(context);
                         },
-                        child: Text(
-                          'Confirm Booking',
-                          style: TextStyle(color: Colors.white),
-                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepOrange,
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
+                        ),
+                        child: const Text(
+                          'Confirm Booking',
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ),

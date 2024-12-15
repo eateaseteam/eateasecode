@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +9,7 @@ class AddEditRestaurantPage extends StatefulWidget {
   final String? restaurantId;
   final Map<String, dynamic>? restaurantData;
 
-  const AddEditRestaurantPage({Key? key, this.restaurantId, this.restaurantData}) : super(key: key);
+  const AddEditRestaurantPage({super.key, this.restaurantId, this.restaurantData});
 
   @override
   _AddEditRestaurantPageState createState() => _AddEditRestaurantPageState();
@@ -186,7 +185,7 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
                 top: 10,
                 right: 10,
                 child: IconButton(
-                  icon: Icon(Icons.close, color: Colors.white),
+                  icon: const Icon(Icons.close, color: Colors.white),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -203,7 +202,7 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
       appBar: AppBar(
         title: Text(
           widget.restaurantId == null ? 'Add Restaurant' : 'Edit Restaurant',
-          style: TextStyle(color: Colors.white), // Set text color to white
+          style: const TextStyle(color: Colors.white), // Set text color to white
         ),
         backgroundColor: Colors.indigo[600],
       ),
@@ -248,43 +247,50 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: _pickImage,
-                  icon: Icon(Icons.add_a_photo, color: Colors.white),
-                  label: Text(
+                  icon: const Icon(Icons.add_a_photo, color: Colors.white),
+                  label: const Text(
                     'Select Logo',
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo[600],
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 _buildTextField(_nameController, 'Restaurant Name', Icons.restaurant),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildTextField(_ownerController, 'Owner Name', Icons.person),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildTextField(_addressController, 'Address', Icons.location_on),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildTextField(_emailController, 'Email', Icons.email, isEmail: true),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 if (widget.restaurantId == null)
                   _buildTextField(_passwordController, 'Password', Icons.lock, isPassword: true),
                 if (widget.restaurantId == null)
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                 _buildTextField(_phoneNumberController, 'Phone Number', Icons.phone),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildTextField(_aboutController, 'About', Icons.info_outline, isMultiline: true),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isUploading ? null : _saveRestaurant,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo[600],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   child: _isUploading
-                      ? SizedBox(
+                      ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -294,16 +300,9 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
                   )
                       : Text(
                     widget.restaurantId == null ? 'Add Restaurant' : 'Update Restaurant',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo[600],
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),

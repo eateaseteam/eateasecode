@@ -8,7 +8,7 @@ import 'restaurant_data_manager.dart';
 class HomeScreen extends StatefulWidget {
   final String email;
 
-  HomeScreen({required this.email});
+  const HomeScreen({super.key, required this.email});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -68,11 +68,11 @@ class _HomeScreenState extends State<HomeScreen> {
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || !snapshot.data!.exists) {
-              return Center(child: Text('No user data found.'));
+              return const Center(child: Text('No user data found.'));
             } else {
               final userData = snapshot.data!.data() as Map<String, dynamic>;
               final firstName = userData['firstName'] ?? 'User';
@@ -123,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'Welcome back!',
                   style: GoogleFonts.poppins(
@@ -135,13 +135,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Image.asset(
             'lib/assets/app_images/updated_official_logo.png',
             height: 40,
           ),
           IconButton(
-            icon: Icon(Icons.notifications_none, size: 28, color: Colors.black),
+            icon: const Icon(Icons.notifications_none, size: 28, color: Colors.black),
             onPressed: () {
               Navigator.push(
                 context,
@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -166,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
-              offset: Offset(0, 5),
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -224,14 +224,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         ListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: _searchResults.length,
           itemBuilder: (context, index) {
             final item = _searchResults[index];
             return Card(
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: ListTile(
-                contentPadding: EdgeInsets.all(8),
+                contentPadding: const EdgeInsets.all(8),
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
@@ -300,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 200,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: _popularFoods.length,
             itemBuilder: (context, index) {
               final food = _popularFoods[index];
@@ -317,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: Container(
                   width: 160,
-                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
                   child: Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -328,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         ClipRRect(
                           borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(12)),
+                          const BorderRadius.vertical(top: Radius.circular(12)),
                           child: Image.network(
                             food['image'],
                             height: 100,
@@ -355,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 food['restaurantName'],
                                 style: GoogleFonts.poppins(
@@ -365,7 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 'PHP ${food['price'].toStringAsFixed(2)}',
                                 style: GoogleFonts.poppins(
@@ -394,13 +394,13 @@ class _HomeScreenState extends State<HomeScreen> {
       stream: _restaurantDataManager.getRestaurantsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No restaurants found.'));
+          return const Center(child: Text('No restaurants found.'));
         }
 
         final restaurants = snapshot.data!.docs;
@@ -422,11 +422,17 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: restaurants.length,
                 itemBuilder: (context, index) {
                   final restaurant = restaurants[index].data() as Map<String, dynamic>;
                   final restaurantId = restaurants[index].id;
+
+                  // Check the `disabled` property
+                  if (restaurant['disabled'] == true) {
+                    return const SizedBox.shrink(); // Hide the restaurant card
+                  }
+
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -440,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: Container(
                       width: 160,
-                      margin: EdgeInsets.symmetric(horizontal: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
                       child: Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
@@ -451,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             ClipRRect(
                               borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(12)),
+                              const BorderRadius.vertical(top: Radius.circular(12)),
                               child: Image.network(
                                 restaurant['logoUrl'],
                                 height: 100,
@@ -479,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     restaurant['address'] ?? '',
                                     style: GoogleFonts.poppins(
@@ -500,10 +506,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            SizedBox(height: 20), // Add some bottom padding
+            const SizedBox(height: 20),
           ],
         );
       },
     );
   }
+
 }

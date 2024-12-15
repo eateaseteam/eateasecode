@@ -8,8 +8,7 @@ import 'RestaurantPage/reservation_screen.dart';
 class HomeScreenContainer extends StatefulWidget {
   final String email;
 
-  const HomeScreenContainer({required this.email, Key? key})
-      : super(key: key);
+  const HomeScreenContainer({required this.email, super.key});
 
   @override
   _HomeScreenContainerState createState() => _HomeScreenContainerState();
@@ -22,7 +21,7 @@ class _HomeScreenContainerState extends State<HomeScreenContainer> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeScreen(email: widget.email),
-      ReservationScreen(),
+      const ReservationScreen(),
       ProfileScreen(email: widget.email),
     ];
 
