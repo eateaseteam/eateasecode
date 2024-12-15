@@ -21,10 +21,13 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
+  Set<String> disabledRestaurantIds = {};
+
   @override
   void initState() {
     super.initState();
     _loadPopularFoods();
+    _observeRestaurantStatus();
   }
 
   @override
@@ -34,11 +37,45 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadPopularFoods() async {
-    final foods = await _restaurantDataManager.getRandomPopularFoods(10);
-    setState(() {
-      _popularFoods = foods;
+    try {
+      final allFoods = await _restaurantDataManager.getRandomPopularFoods(20);
+
+      // Filter only popular foods from active (non-disabled) restaurants
+      final filteredFoods = allFoods.where((food) {
+        return !disabledRestaurantIds.contains(food['restaurantId']);
+      }).toList();
+
+      setState(() {
+        _popularFoods = filteredFoods;
+      });
+    } catch (e) {
+      print('Error loading popular foods: $e');
+    }
+  }
+
+
+
+  void _observeRestaurantStatus() {
+    FirebaseFirestore.instance
+        .collection('restaurants')
+        .snapshots()
+        .listen((snapshot) {
+      final updatedDisabledIds = <String>{};
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['disabled'] == true) {
+          updatedDisabledIds.add(doc.id);
+        }
+      }
+
+      setState(() {
+        disabledRestaurantIds = updatedDisabledIds;
+      });
+      _loadPopularFoods();
     });
   }
+
 
   Future<void> _searchMenuItems(String query) async {
     if (query.isEmpty) {
@@ -121,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
+
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -283,16 +321,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularFoods() {
+    if (_popularFoods.isEmpty) {
+      return const SizedBox(
+        child: Center(
+          child: Text(
+            'No Popular Foods Available',
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
           child: Text(
-            'Popular Foods',
-            style: GoogleFonts.poppins(
+            'Popular Food Recommendations',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
               fontSize: 18,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -327,10 +376,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         ClipRRect(
-                          borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(12)),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                           child: Image.network(
-                            food['image'],
+                            food['image'] ?? '',
                             height: 100,
                             width: double.infinity,
                             fit: BoxFit.cover,
@@ -338,43 +386,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               return Container(
                                 height: 100,
                                 color: Colors.grey[300],
-                                child: Icon(Icons.restaurant, color: Colors.grey[500]),
+                                child: const Icon(Icons.restaurant, color: Colors.grey),
                               );
                             },
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                food['name'],
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                food['restaurantName'],
-                                style: GoogleFonts.poppins(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'PHP ${food['price'].toStringAsFixed(2)}',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.orange,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                          child: Text(
+                            food['name'] ?? 'Unknown Food',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
