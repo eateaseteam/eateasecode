@@ -445,7 +445,7 @@ class _ReservationPageState extends State<ReservationPage> {
           constraints: const BoxConstraints(maxWidth: 500),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
