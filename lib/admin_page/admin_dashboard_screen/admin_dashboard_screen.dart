@@ -96,6 +96,14 @@ class AdminDashboardScreen extends StatelessWidget {
                     Icons.admin_panel_settings,
                   ),
                 ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: _buildOverviewCard(
+                    'Total Restaurants',
+                    data['totalRestaurants'].toString(),
+                    Icons.storefront,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -155,6 +163,7 @@ class AdminDashboardScreen extends StatelessWidget {
             _buildBarChartGroupData(0, data['totalCustomers'].toDouble(), Colors.blue),
             _buildBarChartGroupData(1, data['activeRestaurants'].toDouble(), Colors.green),
             _buildBarChartGroupData(2, data['totalAdmins'].toDouble(), Colors.orange),
+            _buildBarChartGroupData(3, data['totalRestaurants'].toDouble(), Colors.purple),
           ],
           titlesData: FlTitlesData(
             leftTitles: AxisTitles(
@@ -168,9 +177,11 @@ class AdminDashboardScreen extends StatelessWidget {
                     case 0:
                       return Text('Customers');
                     case 1:
-                      return Text('Restaurants');
+                      return Text('Active Rests');
                     case 2:
                       return Text('Admins');
+                    case 3:
+                      return Text('Total Rests');
                     default:
                       return Text('');
                   }
@@ -178,7 +189,6 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
             ),
           ),
-
           borderData: FlBorderData(show: false),
           barTouchData: BarTouchData(enabled: true),
         ),
@@ -205,6 +215,7 @@ class AdminDashboardScreen extends StatelessWidget {
       int totalCustomers = 0;
       int activeRestaurants = 0;
       int totalAdmins = 0;
+      int totalRestaurants = restaurants.length;
 
       try {
         // Fetch total customers
@@ -231,6 +242,7 @@ class AdminDashboardScreen extends StatelessWidget {
           'totalCustomers': totalCustomers,
           'activeRestaurants': activeRestaurants,
           'totalAdmins': totalAdmins,
+          'totalRestaurants': totalRestaurants,
         };
       } catch (e) {
         print('Error calculating overview data: $e');
@@ -238,6 +250,7 @@ class AdminDashboardScreen extends StatelessWidget {
           'totalCustomers': 0,
           'activeRestaurants': 0,
           'totalAdmins': 0,
+          'totalRestaurants': 0,
         };
       }
 
