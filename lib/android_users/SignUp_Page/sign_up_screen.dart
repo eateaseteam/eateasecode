@@ -8,6 +8,7 @@ import 'package:flutter/gestures.dart';
 import '../../Notification_Handler/notification_handler.dart';
 import '../../SignIn_Page/sign_in_screen.dart';
 import '../../assets/constants.dart';
+import 'package:flutter/services.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,6 +20,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -34,6 +36,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _notificationHandler.initializeNotifications();
     _notificationHandler.requestNotificationPermissions();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +80,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                         ],
+                      ),const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _phoneController,
+                        hintText: 'Phone Number',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly, // Restrict to numbers
+                          LengthLimitingTextInputFormatter(11),  // Limit input to 11 digits
+                        ],
                       ),
+
                       const SizedBox(height: 16),
                       _buildInputField(
                         controller: _emailController,
@@ -186,11 +199,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     bool? isPasswordVisible,
     VoidCallback? onTogglePassword,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       obscureText: isPassword && !(isPasswordVisible ?? false),
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: GoogleFonts.poppins(
@@ -229,12 +244,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  Future<void> _saveUser(String firstName, String lastName, String email) async {
+  Future<void> _saveUser(String firstName, String lastName, String email, int phone) async {
     await FirebaseFirestore.instance.collection('users').doc(email).set({
       'firstName': firstName,
       'lastName': lastName,
       'fullName': '$firstName $lastName',
       'email': email,
+      'phone': phone
     });
   }
 
@@ -256,13 +272,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     String firstName = _firstNameController.text.trim();
     String lastName = _lastNameController.text.trim();
+    String phone = _phoneController.text.trim();
     String email = _emailController.text.trim();
     String password = _passwordController.text;
     String confirmPassword = _confirmPasswordController.text;
 
-    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty ||
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || phone.isEmpty ||
         password.isEmpty || confirmPassword.isEmpty) {
       _showToast('Please fill in all fields', Colors.red);
+    } else if (!RegExp(r'^\d{11}$').hasMatch(phone)) {
+      // Ensure phone number is 11 digits
+      _showToast('Phone number must be exactly 11 digits', Colors.red);
     } else if (password != confirmPassword) {
       _showToast('Passwords do not match', Colors.red);
     } else {
@@ -273,7 +293,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             password: password,
           );
 
-          await _saveUser(firstName, lastName, email);
+          int phoneNumber = int.parse(phone);
+
+          await _saveUser(firstName, lastName, email, phoneNumber);
           _showToast("Account created successfully", Colors.green);
 
           Navigator.of(context).pushReplacement(

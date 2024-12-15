@@ -25,11 +25,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final ImagePicker picker = ImagePicker();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   bool _isEditing = false;
 
   @override
   void dispose() {
     _firstNameController.dispose();
+    _phoneController.dispose();
     _lastNameController.dispose();
     super.dispose();
   }
@@ -260,6 +262,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _updateProfile() async {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
+    final String phoneString = _phoneController.text.trim();
+    final int phone = int.tryParse(phoneString) ?? 0; // Safely parse to int, fallback to 0 if invalid
     final fullName = '$firstName $lastName'.trim();
 
     try {
@@ -267,6 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'firstName': firstName,
         'lastName': lastName,
         'fullName': fullName,
+        'phone': phone
       });
 
       setState(() {
@@ -308,6 +313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (!_isEditing) {
                   _firstNameController.clear();
                   _lastNameController.clear();
+                  _phoneController.clear();
                 }
               });
             },
@@ -334,6 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (!_isEditing) {
             _firstNameController.text = userData?['firstName'] ?? '';
             _lastNameController.text = userData?['lastName'] ?? '';
+            _phoneController.text = (userData?['phone']?.toString()) ?? '';
           }
 
           return SingleChildScrollView(
@@ -690,6 +697,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
             controller: _lastNameController,
             decoration: InputDecoration(
               labelText: 'Last Name',
+              labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.deepOrange),
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+            style: GoogleFonts.poppins(),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _phoneController,
+            decoration: InputDecoration(
+              enabled: false,
+              labelText: 'Phone Number',
               labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
