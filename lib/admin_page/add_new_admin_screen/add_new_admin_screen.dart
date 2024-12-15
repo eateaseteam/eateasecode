@@ -28,14 +28,13 @@ class _AdminPanelState extends State<AdminPanel> {
     try {
       String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'Unknown';
       await FirebaseFirestore.instance
-          .collection('admins')
-          .doc(currentUserId)
           .collection('admin_logs')
           .add({
         'action': action,
         'details': details,
         'timestamp': FieldValue.serverTimestamp(),
         'performedBy': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        'adminId': currentUserId,
       });
     } catch (e) {
       print('Error logging activity: $e');
@@ -44,7 +43,11 @@ class _AdminPanelState extends State<AdminPanel> {
 
   Future<void> _addNewAdmin(String username, String email, String password) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      // Create a new instance of FirebaseAuth
+      FirebaseAuth tempAuth = FirebaseAuth.instance;
+
+      // Create the new admin user
+      UserCredential userCredential = await tempAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -58,7 +61,10 @@ class _AdminPanelState extends State<AdminPanel> {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
+        // Log the activity using the current user's ID, not the new admin's
+        String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'Unknown';
         await _logActivity('Add Admin', 'Added new admin: $username ($email)');
+
         _showSnackBar('Admin added successfully!', Colors.green);
       }
     } catch (e) {
@@ -358,7 +364,7 @@ class _AdminPanelState extends State<AdminPanel> {
                       return SingleChildScrollView(
                         scrollDirection: Axis.vertical,
                         child: DataTable(
-                          headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
+                          headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
                           headingTextStyle: GoogleFonts.poppins(color: Colors.indigo[900], fontWeight: FontWeight.w600),
                           dataTextStyle: GoogleFonts.poppins(color: Colors.indigo[800]),
                           columns: const [
@@ -411,3 +417,4 @@ class _AdminPanelState extends State<AdminPanel> {
     );
   }
 }
+

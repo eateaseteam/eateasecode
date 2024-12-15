@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // Add this for date formatting
+import 'package:intl/intl.dart';
 import '../admin_home_screen_page/admin_home_screen_page.dart';
 
 class AdminLoginPage extends StatefulWidget {
@@ -50,7 +50,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
         // Navigate to the Admin Dashboard
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => AdminHomeScreenPage(userId: userId)),
+          MaterialPageRoute(builder: (context) => const AdminHomeScreenPage()),
               (route) => false, // Remove all previous routes
         );
       } else {
@@ -65,16 +65,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   Future<void> _logAdminLogin(String userId, String email) async {
     try {
       await FirebaseFirestore.instance
-          .collection('admins')
-          .doc(userId) // Use admin ID
-          .collection('login_logs') // Create a separate collection for logs
+          .collection('admin_logs')
           .add({
-        'userId': userId,
-        'email': email, // Record the email of the user who logged in
         'action': 'Login',
+        'details': 'Admin logged in',
         'timestamp': FieldValue.serverTimestamp(),
-        'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a')
-            .format(DateTime.now()),
+        'performedBy': email,
+        'adminId': userId,
       });
     } catch (e) {
       print('Error logging admin login: $e');
@@ -206,3 +203,5 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     );
   }
 }
+
+

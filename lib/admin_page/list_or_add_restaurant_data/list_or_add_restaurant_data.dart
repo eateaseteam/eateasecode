@@ -21,14 +21,13 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       final currentUserId = _auth.currentUser?.uid;
       if (currentUserId != null) {
         await FirebaseFirestore.instance
-            .collection('admins')
-            .doc(currentUserId)
-            .collection('list_or_add_restaurant_activity_logs')
+            .collection('admin_logs')
             .add({
           'action': action,
           'details': details,
           'timestamp': FieldValue.serverTimestamp(),
           'performedBy': _auth.currentUser?.email ?? 'Unknown',
+          'adminId': currentUserId,
         });
       }
     } catch (e) {
@@ -210,7 +209,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       child: DataTable(
         columnSpacing: 20,
         horizontalMargin: 12,
-        headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
+        headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
         headingTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[900],
           fontWeight: FontWeight.w600,
@@ -239,7 +238,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       child: DataTable(
         columnSpacing: 20,
         horizontalMargin: 12,
-        headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
+        headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
         headingTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[900],
           fontWeight: FontWeight.w600,
@@ -248,23 +247,16 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           color: Colors.indigo[800],
         ),
         columns: const [
-          DataColumn(label: Text('Logo')),
-          DataColumn(label: Text('Name')),
-          DataColumn(label: Text('Email')),
-          DataColumn(label: Text('Phone')),
-          DataColumn(label: Text('Address')),
-          DataColumn(label: Text('Actions')),
+          DataColumn(label: SizedBox(width: 60, child: Text('Logo'))),
+          DataColumn(label: SizedBox(width: 100, child: Text('Name'))),
+          DataColumn(label: SizedBox(width: 100, child: Text('Owner'))),
+          DataColumn(label: SizedBox(width: 150, child: Text('Email'))),
+          DataColumn(label: SizedBox(width: 100, child: Text('Phone'))),
+          DataColumn(label: SizedBox(width: 150, child: Text('Address'))),
+          DataColumn(label: SizedBox(width: 150, child: Text('About'))),
+          DataColumn(label: SizedBox(width: 120, child: Text('Actions'))),
         ],
-        rows: restaurants.map((doc) => DataRow(
-          cells: [
-            DataCell(_buildLogoCell(doc.id)),
-            DataCell(Text(doc['name'], overflow: TextOverflow.ellipsis)),
-            DataCell(Text(doc['email'], overflow: TextOverflow.ellipsis)),
-            DataCell(Text(doc['phoneNumber'] ?? 'N/A', overflow: TextOverflow.ellipsis)),
-            DataCell(Text(doc['address'] ?? 'N/A', overflow: TextOverflow.ellipsis)),
-            DataCell(_buildActionButtons(doc)),
-          ],
-        )).toList(),
+        rows: restaurants.map((doc) => _buildRestaurantRow(doc)).toList(),
       ),
     );
   }
@@ -277,22 +269,63 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       itemBuilder: (context, index) {
         final doc = restaurants[index];
         return Card(
+          elevation: 3,
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: ListTile(
+          child: ExpansionTile(
             leading: _buildLogoCell(doc.id),
-            title: Text(doc['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(doc['email']),
-                Text(doc['phoneNumber'] ?? 'N/A'),
-                Text(doc['address'] ?? 'N/A'),
-              ],
-            ),
-            trailing: _buildActionButtons(doc),
+            title: Text(doc['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            subtitle: Text(doc['owner'], style: GoogleFonts.poppins(color: Colors.grey[600])),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow(Icons.email, 'Email', doc['email']),
+                    _buildInfoRow(Icons.phone, 'Phone', doc['phoneNumber'] ?? 'N/A'),
+                    _buildInfoRow(Icons.location_on, 'Address', doc['address'] ?? 'N/A'),
+                    _buildInfoRow(Icons.info_outline, 'About', doc['about'] ?? 'No description', maxLines: 3),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _buildActionButtons(doc),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.indigo[400]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.indigo[700])),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(color: Colors.grey[800]),
+                  maxLines: maxLines,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -300,18 +333,18 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     return DataRow(
       cells: [
         DataCell(_buildLogoCell(doc.id)),
-        DataCell(Text(doc['name'], overflow: TextOverflow.ellipsis)),
-        DataCell(Text(doc['owner'], overflow: TextOverflow.ellipsis)),
-        DataCell(Text(doc['address'], overflow: TextOverflow.ellipsis)),
-        DataCell(Text(doc['email'], overflow: TextOverflow.ellipsis)),
-        DataCell(Text(doc['phoneNumber'], overflow: TextOverflow.ellipsis)),
+        DataCell(_buildEllipsisText(doc['name'], 100)),
+        DataCell(_buildEllipsisText(doc['owner'], 100)),
+        DataCell(_buildEllipsisText(doc['address'], 150)),
+        DataCell(_buildEllipsisText(doc['email'], 150)),
+        DataCell(_buildEllipsisText(doc['phoneNumber'], 100)),
         DataCell(
-          SizedBox(
-            width: 200,
+          Container(
+            width: 150,
             child: Text(
               doc['about'] ?? 'No description',
               overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+              maxLines: 3,
             ),
           ),
         ),
@@ -362,10 +395,9 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-// Function to enable the restaurant
+  // Function to enable the restaurant
   Future<void> _enableRestaurant(String uid) async {
     try {
-
       DocumentSnapshot restaurantDoc = await _firestore.collection('restaurants').doc(uid).get();
 
       if (restaurantDoc.exists) {
@@ -392,7 +424,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     }
   }
 
-// Updated action buttons with Enable/Disable Logic
+  // Updated action buttons with Enable/Disable Logic
   Widget _buildActionButtons(DocumentSnapshot doc) {
     bool isDisabled = doc['disabled'] ?? false; // Read the 'disabled' status from Firestore
 
@@ -422,9 +454,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
               _showDisableConfirmationDialog(context, doc.id);
             }
           },
-
         ),
-
         IconButton(
           icon: Icon(Icons.lock_reset, color: Colors.orange[600]),
           onPressed: () => _sendPasswordResetEmail(doc['email']),
@@ -512,6 +542,15 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-
+  Widget _buildEllipsisText(String text, double width) {
+    return Container(
+      width: width,
+      child: Text(
+        text,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+    );
+  }
 }
 

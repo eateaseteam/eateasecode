@@ -12,9 +12,7 @@ import '../recent_activity_screen/recent_activity_screen.dart';
 import '../welcome_screen/log_in_as_screen.dart';
 
 class AdminHomeScreenPage extends StatefulWidget {
-  final String? userId; // Make userId optional
-
-  const AdminHomeScreenPage({super.key, this.userId});
+  const AdminHomeScreenPage({super.key});
 
   @override
   _AdminHomeScreenPageState createState() => _AdminHomeScreenPageState();
@@ -28,22 +26,37 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.userId != null) {
-      _fetchAdminEmail(); // Fetch admin email only if userId is provided
-    }
+    _listenToAuthChanges();
+    _fetchAdminEmail();
   }
+
+  void _listenToAuthChanges() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _fetchAdminEmail();
+      } else {
+        setState(() {
+          _adminEmail = 'Guest Admin';
+        });
+      }
+    });
+  }
+
 
   Future<void> _fetchAdminEmail() async {
     try {
-      DocumentSnapshot adminDoc = await FirebaseFirestore.instance
-          .collection('admins')
-          .doc(widget.userId)
-          .get();
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(currentUser.uid)
+            .get();
 
-      if (adminDoc.exists) {
-        setState(() {
-          _adminEmail = adminDoc['email']; // Fetch the email from Firestore
-        });
+        if (adminDoc.exists) {
+          setState(() {
+            _adminEmail = adminDoc['email'];
+          });
+        }
       }
     } catch (e) {
       print('Error fetching admin email: $e');
@@ -97,19 +110,17 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
   }
 
   Future<void> _logAdminLogout() async {
-    if (widget.userId != null) {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
       try {
         await FirebaseFirestore.instance
-            .collection('admins')
-            .doc(widget.userId) // Use admin ID
-            .collection('logout_logs') // Separate collection for logout logs
+            .collection('admin_logs')
             .add({
-          'userId': widget.userId,
-          'email': _adminEmail, // Record the email of the user who logged out
           'action': 'Logout',
+          'details': 'Admin logged out',
           'timestamp': FieldValue.serverTimestamp(),
-          'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a')
-              .format(DateTime.now()),
+          'performedBy': _adminEmail ?? 'Unknown',
+          'adminId': currentUser.uid,
         });
       } catch (e) {
         print('Error logging admin logout: $e');
@@ -231,3 +242,4 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     );
   }
 }
+

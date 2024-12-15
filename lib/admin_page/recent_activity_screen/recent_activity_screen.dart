@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class RecentActivityScreen extends StatefulWidget {
@@ -17,7 +16,6 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
   bool _isAscending = false;
   String _selectedLogType = 'All';
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +66,7 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
         const SizedBox(width: 16),
         DropdownButton<String>(
           value: _selectedLogType,
-          items: ['All', 'Admin', 'Customer', 'Restaurant'].map((String value) {
+          items: ['All', 'Admin', 'Restaurant'].map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -123,96 +121,33 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
     );
   }
 
-  Stream<List<Map<String, dynamic>>> _getActivityStream() async* {
-    User? currentUser = _auth.currentUser;
-
-    if (currentUser == null) {
-      yield [];
-      return;
-    }
-
-    String currentUserId = currentUser.uid;
-
-    var firestore = FirebaseFirestore.instance;
-
-    // Fetch logs specifically for the current user
-    Stream<QuerySnapshot> adminLogStream = firestore.collection('admins').doc(currentUserId).collection('admin_logs').snapshots();
-    Stream<QuerySnapshot> adminLoginStream = firestore.collection('admins').doc(currentUserId).collection('login_logs').snapshots();
-    Stream<QuerySnapshot> adminLogoutStream = firestore.collection('admins').doc(currentUserId).collection('logout_logs').snapshots();
-    Stream<QuerySnapshot> customerListDataStream = firestore.collection('admins').doc(currentUserId).collection('customer_list_data_logs').snapshots();
-    Stream<QuerySnapshot> restaurantActivityStream = firestore.collection('admins').doc(currentUserId).collection('list_or_add_restaurant_activity_logs').snapshots();
-
-    yield* Rx.combineLatest5(
-      adminLogStream,
-      adminLoginStream,
-      adminLogoutStream,
-      customerListDataStream,
-      restaurantActivityStream,
-          (QuerySnapshot adminLogSnapshot, QuerySnapshot adminLoginSnapshot, QuerySnapshot adminLogoutSnapshot, QuerySnapshot customerListDataSnapshot, QuerySnapshot restaurantActivitySnapshot) {
-        List<Map<String, dynamic>> allActivities = [];
-
-        allActivities.addAll(adminLogSnapshot.docs.map((doc) {
-          var data = doc.data() as Map<String, dynamic>;
-          return {
-            'details': data['details'],
-            'timestamp': data['timestamp'],
-            'performedBy': data['performedBy'],
-            'action': data['action'],
-          };
-        }));
-
-        allActivities.addAll(adminLoginSnapshot.docs.map((doc) {
-          var data = doc.data() as Map<String, dynamic>;
-          return {
-            'details': 'Logged in',
-            'timestamp': data['timestamp'],
-            'performedBy': data['email'],
-            'action': 'Login',
-          };
-        }));
-
-        allActivities.addAll(adminLogoutSnapshot.docs.map((doc) {
-          var data = doc.data() as Map<String, dynamic>;
-          return {
-            'details': 'Logged out',
-            'timestamp': data['timestamp'],
-            'performedBy': data['email'],
-            'action': 'Logout',
-          };
-        }));
-
-        allActivities.addAll(customerListDataSnapshot.docs.map((doc) {
-          var data = doc.data() as Map<String, dynamic>;
-          return {
-            'details': data['details'],
-            'timestamp': data['timestamp'],
-            'performedBy': data['performedBy'],
-            'action': data['action'],
-          };
-        }));
-
-        allActivities.addAll(restaurantActivitySnapshot.docs.map((doc) {
-          var data = doc.data() as Map<String, dynamic>;
-          return {
-            'details': data['details'],
-            'timestamp': data['timestamp'],
-            'performedBy': data['performedBy'],
-            'action': data['action'],
-          };
-        }));
-
-        return allActivities;
-      },
-    );
+  Stream<List<Map<String, dynamic>>> _getActivityStream() {
+    return FirebaseFirestore.instance
+        .collection('admin_logs')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        var data = doc.data();
+        return {
+          'details': data['details'],
+          'timestamp': data['timestamp'],
+          'performedBy': data['performedBy'],
+          'action': data['action'],
+          'adminId': data['adminId'],
+        };
+      }).toList();
+    });
   }
 
   List<Map<String, dynamic>> _filterAndSortActivities(List<Map<String, dynamic>> activities) {
+    String currentUserId = _auth.currentUser?.uid ?? '';
     var filteredActivities = activities.where((activity) {
       var searchTerm = _searchController.text.toLowerCase();
       return (activity['details']?.toString().toLowerCase() ?? '').contains(searchTerm) ||
           (activity['performedBy']?.toString().toLowerCase() ?? '').contains(searchTerm) ||
           (activity['action']?.toString().toLowerCase() ?? '').contains(searchTerm);
     }).toList();
+
 
     if (_selectedLogType == 'Admin') {
       filteredActivities = filteredActivities.where((activity) {
@@ -311,13 +246,24 @@ class ActivityItem extends StatelessWidget {
 
   Widget _buildDetailsWidget(dynamic details) {
     if (details is Map<String, dynamic>) {
+      // Define the order of fields for restaurant details
+      final orderOfFields = ['owner', 'name', 'email', 'address', 'phoneNumber', 'about'];
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: details.entries.map((entry) {
+        children: orderOfFields.where((field) =>
+        details.containsKey(field) &&
+            !['logoUrl', 'disabled', 'uid'].contains(field)
+        ).map((field) {
+          var value = details[field];
+          // Special handling for createdAt
+          if (field == 'createdAt' && value is Timestamp) {
+            value = DateFormat('MMM dd, yyyy h:mm a').format(value.toDate());
+          }
           return Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
             child: Text(
-              '${entry.key}: ${entry.value}',
+              '$field: $value',
               style: GoogleFonts.inter(fontSize: 14),
             ),
           );
@@ -355,7 +301,7 @@ class ActivityItem extends StatelessWidget {
 
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return 'Unknown Date';
-    return DateFormat('MMM d \'at\' h:mm a').format(timestamp.toDate());
+    return DateFormat('MMM dd, yyyy h:mm a').format(timestamp.toDate());
   }
 }
 
