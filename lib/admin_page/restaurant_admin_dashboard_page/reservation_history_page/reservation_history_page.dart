@@ -182,7 +182,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
+              headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
               columns: const [
                 DataColumn(label: Text('ID')),
                 DataColumn(label: Text('Customer')),
@@ -427,8 +427,5 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     }
   }
 }
-
-
-
 
 

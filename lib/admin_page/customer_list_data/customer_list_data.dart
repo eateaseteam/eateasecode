@@ -189,7 +189,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
           scrollDirection: Axis.horizontal,
           child: SingleChildScrollView(
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(const Color(0xFF2D3748)),
+              headingRowColor: MaterialStateProperty.all(const Color(0xFF2D3748)),
               headingTextStyle: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
               columns: const [
                 DataColumn(label: Text('ID')),
@@ -237,3 +237,4 @@ class _CustomerListPageState extends State<CustomerListPage> {
     );
   }
 }
+

@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
+import '../welcome_screen/log_in_as_screen.dart';
 
 class AddEditRestaurantPage extends StatefulWidget {
   final String? restaurantId;
@@ -84,6 +85,9 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
       setState(() => _isUploading = true);
 
       try {
+        // Store current admin's email before any authentication changes
+        final currentAdminEmail = _auth.currentUser?.email;
+
         String? imageUrl;
         if (_selectedImage != null && _imageBytes != null) {
           imageUrl = await _uploadImage(_selectedImage!, _imageBytes!);
@@ -96,6 +100,7 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
           'email': _emailController.text,
           'phoneNumber': _phoneNumberController.text,
           'about': _aboutController.text,
+          'disabled': false, // Initialize the disabled field
           if (imageUrl != null) 'logoUrl': imageUrl,
           if (widget.restaurantId == null) 'createdAt': FieldValue.serverTimestamp(),
         };
@@ -104,21 +109,45 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
           // Editing existing restaurant
           final updatedFields = _getUpdatedFields(restaurantData);
           await _firestore.collection('restaurants').doc(widget.restaurantId).update(updatedFields);
-          await _logActivity('Edit Restaurant', updatedFields);
+
+          // Log activity with current admin's email
+          await _logActivity('Edit Restaurant', updatedFields, currentAdminEmail);
+
+          _showSnackBar('Restaurant updated successfully', Colors.green);
+          Navigator.pop(context);
         } else {
           // Adding new restaurant
-          UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-            email: _emailController.text,
-            password: _passwordController.text,
-          );
+          try {
+            // Create a temporary auth instance for the new restaurant
+            FirebaseAuth tempAuth = FirebaseAuth.instance;
+            UserCredential userCredential = await tempAuth.createUserWithEmailAndPassword(
+              email: _emailController.text,
+              password: _passwordController.text,
+            );
 
-          restaurantData['uid'] = userCredential.user!.uid;
-          await _firestore.collection('restaurants').doc(userCredential.user!.uid).set(restaurantData);
-          await _logActivity('Add Restaurant', restaurantData);
+            restaurantData['uid'] = userCredential.user!.uid;
+
+            // Add the restaurant data
+            await _firestore.collection('restaurants').doc(userCredential.user!.uid).set(restaurantData);
+
+            // Log activity with stored admin email
+            await _logActivity('Add Restaurant', restaurantData, currentAdminEmail);
+
+            // Sign out the temporary user
+            await tempAuth.signOut();
+
+            _showSnackBar('Restaurant saved successfully', Colors.green);
+
+            // Navigate to LoginAsScreen and remove all previous routes
+            if (!mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginAsScreen()),
+                  (Route<dynamic> route) => false,
+            );
+          } catch (authError) {
+            _showSnackBar('Failed to create restaurant account: ${authError.toString()}', Colors.red);
+          }
         }
-
-        _showSnackBar('Restaurant saved successfully', Colors.green);
-        Navigator.pop(context);
       } catch (e) {
         _showSnackBar('Failed to save restaurant: ${e.toString()}', Colors.red);
       } finally {
@@ -137,17 +166,16 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
     return updatedFields;
   }
 
-  Future<void> _logActivity(String action, Map<String, dynamic> details) async {
+  Future<void> _logActivity(String action, Map<String, dynamic> details, String? adminEmail) async {
     try {
-      await _firestore
-          .collection('admins')
-          .doc(_auth.currentUser!.uid)
-          .collection('list_or_add_restaurant_activity_logs')
+      await FirebaseFirestore.instance
+          .collection('admin_logs')
           .add({
         'action': action,
         'details': details,
         'timestamp': FieldValue.serverTimestamp(),
-        'performedBy': _auth.currentUser?.email ?? 'Unknown',
+        'performedBy': adminEmail ?? 'Unknown',
+        'adminId': _auth.currentUser?.uid ?? 'Unknown',
       });
     } catch (e) {
       print('Error logging activity: $e');
@@ -202,7 +230,7 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
       appBar: AppBar(
         title: Text(
           widget.restaurantId == null ? 'Add Restaurant' : 'Edit Restaurant',
-          style: const TextStyle(color: Colors.white), // Set text color to white
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.indigo[600],
       ),
@@ -368,6 +396,4 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
     super.dispose();
   }
 }
-
-
 

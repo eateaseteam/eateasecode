@@ -163,7 +163,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           var adminData = adminDoc.data() as Map<String, dynamic>;
           String fullName = adminData['full_name'] ?? 'Admin Name'; // Safely fetch admin name
           _showWelcomeSnackBar(fullName);
-          _navigateTo(AdminHomeScreenPage(userId: user.uid)); // Pass UID to Admin screen
+          _navigateTo(const AdminHomeScreenPage()); // Remove userId parameter
         } else {
           await FirebaseAuth.instance.signOut();
           _showErrorSnackBar("No matching data found. Logging out.");
@@ -228,3 +228,4 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 }
+
