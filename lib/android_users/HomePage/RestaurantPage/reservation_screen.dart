@@ -46,8 +46,9 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     final restaurantName = data['restaurantName'] ?? 'Unknown Restaurant';
     final logoUrl = data['logoUrl'] ?? 'https://via.placeholder.com/80';
     final dateTime = (data['reservationDateTime'] as Timestamp).toDate();
-    final totalPrice = (data['totalPrice'] as num).toDouble();
     final status = data['status'] ?? 'pending';
+    final totalPrice = (data['totalPrice'] != null) ? (data['totalPrice'] as num).toDouble() : 0.0;
+    final phone = data['phone']?.toString() ?? 'Unknown';
     final reservationId = reservation.id;
     final restaurantId = reservation.reference.parent.parent!.id;
 
@@ -58,6 +59,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
           MaterialPageRoute(
             builder: (context) => ReservationDetailsScreen(
               reservationId: reservationId,
+              phone: phone,
               restaurantId: restaurantId,
             ),
           ),
@@ -122,11 +124,6 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
               ),
               if (status == 'completed' || status == 'approved')
                 const Icon(Icons.check_circle, color: Colors.green, size: 28)
-              else if (status == 'cancelled')
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red, size: 28),
-                  onPressed: () => _confirmDelete(restaurantId, reservationId),
-                )
               else if (status == 'pending')
                   IconButton(
                     icon: const Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
@@ -137,89 +134,6 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
         ),
       ),
     );
-  }
-
-  void _confirmDelete(String restaurantId, String reservationId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Confirm Deletion',
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepOrange,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Are you sure you want to delete this reservation?',
-                  style: GoogleFonts.poppins(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.poppins(color: Colors.grey),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _deleteReservation(restaurantId, reservationId);
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        'Delete',
-                        style: GoogleFonts.poppins(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _deleteReservation(String restaurantId, String reservationId) async {
-    try {
-      await _firestore
-          .collection('restaurants')
-          .doc(restaurantId)
-          .collection('reservations')
-          .doc(reservationId)
-          .delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reservation deleted successfully.')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting reservation: $e')),
-      );
-    }
   }
 
   @override
@@ -433,7 +347,7 @@ class ReservationDetailsScreen extends StatelessWidget {
   final String reservationId;
   final String restaurantId;
 
-  const ReservationDetailsScreen({super.key, required this.reservationId, required this.restaurantId});
+  const ReservationDetailsScreen({super.key, required this.reservationId, required this.restaurantId, required String phone});
 
   @override
   Widget build(BuildContext context) {
@@ -463,6 +377,8 @@ class ReservationDetailsScreen extends StatelessWidget {
           final restaurantName = data['restaurantName'] ?? 'Unknown Restaurant';
           final dateTime = (data['reservationDateTime'] as Timestamp).toDate();
           final totalPrice = (data['totalPrice'] as num).toDouble();
+          final paymentmethod = data['paymentMethod'] ?? 'Unknown Payment Method';
+          final refnumber = data['referenceNumber'] ?? 'Unknown Reference Number';
           final status = data['status'] ?? 'pending';
           final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
           final orderNotes = data['orderNotes'] as String? ?? 'No notes provided';
@@ -480,6 +396,14 @@ class ReservationDetailsScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Date: ${DateFormat('MMM d, yyyy - h:mm a').format(dateTime)}',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                ),
+                Text(
+                  'Payment Method: $paymentmethod',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                ),
+                Text(
+                  'Ref. Number: $refnumber',
                   style: GoogleFonts.poppins(fontSize: 16),
                 ),
                 Text(

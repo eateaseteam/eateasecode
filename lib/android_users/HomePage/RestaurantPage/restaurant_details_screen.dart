@@ -26,6 +26,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
   final Map<String, Map<String, dynamic>> _cartItems = {};
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  int _phone = 0;
   int _guestCount = 1;
   String _paymentMethod = 'GCash';
   String _referenceNumber = '';
@@ -244,6 +245,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
         'status': 'pending',
         'items': _cartItems.values.toList(),
         'guestCount': _guestCount,
+        'phone': _phone,
         'totalPrice': _calculateTotalPrice(),
         'paymentMethod': _paymentMethod,
         'referenceNumber': _referenceNumber,
@@ -266,6 +268,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> with 
       setState(() {
         _guestCount = 1;
         _paymentMethod = 'GCash';
+        _phone = 0;
         _referenceNumber = '';
         _selectedDate = null;
         _selectedTime = null;

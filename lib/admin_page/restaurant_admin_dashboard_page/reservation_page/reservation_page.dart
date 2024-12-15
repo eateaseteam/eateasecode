@@ -20,7 +20,8 @@ class _ReservationPageState extends State<ReservationPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<void> _logReservationActivity(String action, String reservationId, Map<String, dynamic> reservationData) async {
+  Future<void> _logReservationActivity(String action, String reservationId,
+      Map<String, dynamic> reservationData) async {
     try {
       await _firestore
           .collection('restaurants')
@@ -42,13 +43,15 @@ class _ReservationPageState extends State<ReservationPage> {
       });
 
       // Store reservation data in recent_reservation_history
-      await _storeRecentReservationHistory(action, reservationId, reservationData);
+      await _storeRecentReservationHistory(
+          action, reservationId, reservationData);
     } catch (e) {
       print('Error logging reservation activity: $e');
     }
   }
 
-  Future<void> _storeRecentReservationHistory(String action, String reservationId, Map<String, dynamic> reservationData) async {
+  Future<void> _storeRecentReservationHistory(String action,
+      String reservationId, Map<String, dynamic> reservationData) async {
     try {
       await _firestore
           .collection('restaurants')
@@ -66,7 +69,6 @@ class _ReservationPageState extends State<ReservationPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +77,8 @@ class _ReservationPageState extends State<ReservationPage> {
           slivers: [
             _buildAppBar(),
             StreamBuilder<QuerySnapshot>(
-              stream: _restaurantDataManager.getReservationsStream(widget.restaurantId),
+              stream: _restaurantDataManager
+                  .getReservationsStream(widget.restaurantId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return SliverFillRemaining(
@@ -104,7 +107,8 @@ class _ReservationPageState extends State<ReservationPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.event_busy, size: 64, color: Colors.grey),
+                          const Icon(Icons.event_busy,
+                              size: 64, color: Colors.grey),
                           const SizedBox(height: 16),
                           Text(
                             'No reservations found',
@@ -124,22 +128,30 @@ class _ReservationPageState extends State<ReservationPage> {
                   delegate: SliverChildListDelegate([
                     _buildReservationSection(
                       'Pending',
-                      reservations.where((doc) => doc['status'] == 'pending').toList(),
+                      reservations
+                          .where((doc) => doc['status'] == 'pending')
+                          .toList(),
                       Colors.orange,
                     ),
                     _buildReservationSection(
                       'Approved',
-                      reservations.where((doc) => doc['status'] == 'approved').toList(),
+                      reservations
+                          .where((doc) => doc['status'] == 'approved')
+                          .toList(),
                       Colors.green,
                     ),
                     _buildReservationSection(
                       'Complete',
-                      reservations.where((doc) => doc['status'] == 'completed').toList(),
+                      reservations
+                          .where((doc) => doc['status'] == 'completed')
+                          .toList(),
                       Colors.blue,
                     ),
                     _buildReservationSection(
                       'Cancelled',
-                      reservations.where((doc) => doc['status'] == 'cancelled').toList(),
+                      reservations
+                          .where((doc) => doc['status'] == 'cancelled')
+                          .toList(),
                       Colors.red,
                     ),
                   ]),
@@ -154,7 +166,8 @@ class _ReservationPageState extends State<ReservationPage> {
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      automaticallyImplyLeading: false, // Removes the back button
+      automaticallyImplyLeading: false,
+      // Removes the back button
       floating: true,
       pinned: true,
       elevation: 2,
@@ -184,12 +197,11 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-
   Widget _buildReservationSection(
-      String title,
-      List<QueryDocumentSnapshot> reservations,
-      Color accentColor,
-      ) {
+    String title,
+    List<QueryDocumentSnapshot> reservations,
+    Color accentColor,
+  ) {
     if (reservations.isEmpty) return const SizedBox.shrink();
 
     return Card(
@@ -222,7 +234,8 @@ class _ReservationPageState extends State<ReservationPage> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: accentColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -279,8 +292,9 @@ class _ReservationPageState extends State<ReservationPage> {
                         style: GoogleFonts.inter(),
                       )),
                       DataCell(Text(
-                        DateFormat('MM/dd h:mm a')
-                            .format((data['reservationDateTime'] as Timestamp).toDate()),
+                        DateFormat('MM/dd h:mm a').format(
+                            (data['reservationDateTime'] as Timestamp)
+                                .toDate()),
                         style: GoogleFonts.inter(),
                       )),
                       DataCell(Text(
@@ -296,7 +310,8 @@ class _ReservationPageState extends State<ReservationPage> {
                         style: GoogleFonts.inter(),
                       )),
                       DataCell(_buildStatusBadge(data['status'], accentColor)),
-                      DataCell(_buildActionButtons(data['status'], reservation.id, data)),
+                      DataCell(_buildActionButtons(
+                          data['status'], reservation.id, data)),
                     ],
                   );
                 }).toList(),
@@ -334,7 +349,9 @@ class _ReservationPageState extends State<ReservationPage> {
           children: [
             Flexible(
               child: Text(
-                items.map((item) => '${item['name']} x ${item['quantity']}').join(', '),
+                items
+                    .map((item) => '${item['name']} x ${item['quantity']}')
+                    .join(', '),
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.inter(),
               ),
@@ -365,28 +382,31 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  Widget _buildActionButtons(String status, String reservationId, Map<String, dynamic> data) {
+  Widget _buildActionButtons(
+      String status, String reservationId, Map<String, dynamic> data) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (status == 'pending') ...[
           IconButton(
             icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-            onPressed: () => _updateReservationStatus(reservationId, 'approved'),
+            onPressed: () =>
+                _updateReservationStatus(reservationId, 'approved'),
             tooltip: 'Approve',
           ),
           IconButton(
             icon: const Icon(Icons.cancel_outlined, color: Colors.red),
-            onPressed: () => _updateReservationStatus(reservationId, 'cancelled'),
+            onPressed: () =>
+                _updateReservationStatus(reservationId, 'cancelled'),
             tooltip: 'Cancel',
           ),
         ] else if (status == 'approved') ...[
           IconButton(
             icon: const Icon(Icons.check_circle, color: Colors.blue),
-            onPressed: () => _updateReservationStatus(reservationId, 'completed'),
+            onPressed: () =>
+                _updateReservationStatus(reservationId, 'completed'),
             tooltip: 'Complete',
           ),
-
         ],
         PopupMenuButton<String>(
           icon: Icon(Icons.more_vert, color: Colors.grey[600]),
@@ -402,7 +422,8 @@ class _ReservationPageState extends State<ReservationPage> {
               value: 'view',
               child: Row(
                 children: [
-                  const Icon(Icons.visibility_outlined, size: 20, color: Colors.black87),
+                  const Icon(Icons.visibility_outlined,
+                      size: 20, color: Colors.black87),
                   const SizedBox(width: 8),
                   Text('View Details', style: GoogleFonts.inter()),
                 ],
@@ -411,84 +432,6 @@ class _ReservationPageState extends State<ReservationPage> {
           ],
         ),
       ],
-    );
-  }
-
-  void _confirmDeleteReservation(String reservationId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Confirm Deletion',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Are you sure you want to delete this reservation? This action cannot be undone.',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              try {
-                DocumentSnapshot reservationDoc = await FirebaseFirestore.instance
-                    .collection('restaurants')
-                    .doc(widget.restaurantId)
-                    .collection('reservations')
-                    .doc(reservationId)
-                    .get();
-
-                Map<String, dynamic> reservationData = reservationDoc.data() as Map<String, dynamic>;
-
-                // Store reservation data in recent_reservation_history before deleting
-                await _storeRecentReservationHistory('Delete Reservation', reservationId, reservationData);
-
-                await FirebaseFirestore.instance
-                    .collection('restaurants')
-                    .doc(widget.restaurantId)
-                    .collection('reservations')
-                    .doc(reservationId)
-                    .delete();
-
-                // Add logging with full reservation data
-                await _logReservationActivity('Delete Reservation', reservationId, reservationData);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Reservation deleted successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error deleting reservation: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              'Delete',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -523,12 +466,16 @@ class _ReservationPageState extends State<ReservationPage> {
                 ),
                 const Divider(height: 32),
                 _buildDetailRow('Customer', data['userEmail'] ?? 'N/A'),
-                _buildDetailRow('Reference Number', data['referenceNumber'] ?? 'N/A'),
-                _buildDetailRow('Date/Time',
-                    DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
-                _buildDetailRow('Guests', '${data['guestCount']}'),
+                _buildDetailRow('Phone', (data['phone'] ?? 'N/A').toString()),
                 _buildDetailRow('Payment Method', data['paymentMethod'] ?? 'N/A'),
-                _buildDetailRow('Total Price', 'PHP ${data['totalPrice']?.toStringAsFixed(2) ?? '0.00'}'),
+                _buildDetailRow('Ref. Number', data['referenceNumber'] ?? 'N/A'),
+                _buildDetailRow(
+                    'Date/Time',
+                    DateFormat('MM/dd/yy h:mm a').format(
+                        (data['reservationDateTime'] as Timestamp).toDate())),
+                _buildDetailRow('Guests', '${data['guestCount']}'),
+                _buildDetailRow('Total Price',
+                    'PHP ${data['totalPrice']?.toStringAsFixed(2) ?? '0.00'}'),
                 const SizedBox(height: 16),
                 Text(
                   'Order Items',
@@ -539,24 +486,24 @@ class _ReservationPageState extends State<ReservationPage> {
                 ),
                 const SizedBox(height: 12),
                 ...(data['items'] as List<dynamic>).map((item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        item['name'],
-                        style: GoogleFonts.inter(fontSize: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            item['name'],
+                            style: GoogleFonts.inter(fontSize: 16),
+                          ),
+                          Text(
+                            'x${item['quantity']}',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'x${item['quantity']}',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
+                    )),
                 const SizedBox(height: 16),
                 Text(
                   'Order Notes',
@@ -660,7 +607,8 @@ class _ReservationPageState extends State<ReservationPage> {
   }
 
   void _showNotesDialog(String reservationId, String currentNotes) {
-    final TextEditingController notesController = TextEditingController(text: currentNotes);
+    final TextEditingController notesController =
+        TextEditingController(text: currentNotes);
 
     showDialog(
       context: context,
@@ -714,7 +662,8 @@ class _ReservationPageState extends State<ReservationPage> {
                             .update({'notes': notesController.text});
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Notes updated successfully')),
+                          const SnackBar(
+                              content: Text('Notes updated successfully')),
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -789,17 +738,20 @@ class _ReservationPageState extends State<ReservationPage> {
                     .doc(reservationId)
                     .get();
 
-                Map<String, dynamic> reservationData = reservationDoc.data() as Map<String, dynamic>;
+                Map<String, dynamic> reservationData =
+                    reservationDoc.data() as Map<String, dynamic>;
                 reservationData['status'] = newStatus;
 
                 // Store reservation data in recent_reservation_history before updating
-                await _storeRecentReservationHistory('Update Status', reservationId, reservationData);
+                await _storeRecentReservationHistory(
+                    'Update Status', reservationId, reservationData);
 
                 await _restaurantDataManager.updateReservationStatus(
                     widget.restaurantId, reservationId, newStatus);
 
                 // Add logging with full reservation data
-                await _logReservationActivity('Update Status', reservationId, reservationData);
+                await _logReservationActivity(
+                    'Update Status', reservationId, reservationData);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -852,7 +804,8 @@ class ReservationSearchDelegate extends SearchDelegate {
   final BuildContext parentContext;
   final Function(Map<String, dynamic>) showReservationDetails;
 
-  ReservationSearchDelegate(this.restaurantId, this.parentContext, this.showReservationDetails);
+  ReservationSearchDelegate(
+      this.restaurantId, this.parentContext, this.showReservationDetails);
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -904,8 +857,14 @@ class ReservationSearchDelegate extends SearchDelegate {
 
         final reservations = snapshot.data!.docs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return data['userEmail'].toString().toLowerCase().contains(query.toLowerCase()) ||
-              data['referenceNumber'].toString().toLowerCase().contains(query.toLowerCase());
+          return data['userEmail']
+                  .toString()
+                  .toLowerCase()
+                  .contains(query.toLowerCase()) ||
+              data['referenceNumber']
+                  .toString()
+                  .toLowerCase()
+                  .contains(query.toLowerCase());
         }).toList();
 
         return ListView.builder(
@@ -914,7 +873,8 @@ class ReservationSearchDelegate extends SearchDelegate {
             final data = reservations[index].data() as Map<String, dynamic>;
             return ListTile(
               title: Text(data['userEmail'] ?? 'N/A'),
-              subtitle: Text(DateFormat('MM/dd h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
+              subtitle: Text(DateFormat('MM/dd h:mm a')
+                  .format((data['reservationDateTime'] as Timestamp).toDate())),
               trailing: Text(data['status']),
               onTap: () {
                 close(context, null);
@@ -927,6 +887,3 @@ class ReservationSearchDelegate extends SearchDelegate {
     );
   }
 }
-
-
-
