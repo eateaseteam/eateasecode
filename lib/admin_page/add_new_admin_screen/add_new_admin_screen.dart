@@ -231,12 +231,19 @@ class _AdminPanelState extends State<AdminPanel> {
 
   void _showDeleteConfirmationDialog(
       BuildContext context, String docId, String email) {
+    String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+
+    if (currentUserEmail == email) {
+      _showSnackBar('You cannot delete your own account!', Colors.red);
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: Text('Delete Admin?', style: _dialogTitleStyle),
           content: Text('Are you sure you want to delete this admin?',
               style: _dialogContentStyle),

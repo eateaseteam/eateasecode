@@ -221,9 +221,9 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           DataColumn(label: Text('Logo')),
           DataColumn(label: Text('Name')),
           DataColumn(label: Text('Owner')),
-          DataColumn(label: Text('Address')),
           DataColumn(label: Text('Email')),
           DataColumn(label: Text('Phone')),
+          DataColumn(label: Text('Address')),
           DataColumn(label: Text('About')),
           DataColumn(label: Text('Actions')),
         ],
@@ -335,9 +335,9 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         DataCell(_buildLogoCell(doc.id)),
         DataCell(_buildEllipsisText(doc['name'], 100)),
         DataCell(_buildEllipsisText(doc['owner'], 100)),
-        DataCell(_buildEllipsisText(doc['address'], 150)),
         DataCell(_buildEllipsisText(doc['email'], 150)),
         DataCell(_buildEllipsisText(doc['phoneNumber'], 100)),
+        DataCell(_buildEllipsisText(doc['address'], 150)),
         DataCell(
           Container(
             width: 150,

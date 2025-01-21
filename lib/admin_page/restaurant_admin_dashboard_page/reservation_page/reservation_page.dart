@@ -260,7 +260,7 @@ class _ReservationPageState extends State<ReservationPage> {
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 horizontalMargin: 16,
-                columnSpacing: 24,
+                columnSpacing: 28,
                 headingRowHeight: 48,
                 dataRowHeight: 72,
                 headingTextStyle: GoogleFonts.inter(
@@ -274,6 +274,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   DataColumn(label: Text('Date/Time')),
                   DataColumn(label: Text('Total Price')),
                   DataColumn(label: Text('Payment')),
+                  DataColumn(label: Text('Phone')),
                   DataColumn(label: Text('Ref. Number')),
                   DataColumn(label: Text('Status')),
                   DataColumn(label: Text('Actions')),
@@ -306,6 +307,11 @@ class _ReservationPageState extends State<ReservationPage> {
                         style: GoogleFonts.inter(),
                       )),
                       DataCell(Text(
+                        (data['phone']?.toString() ?? 'N/A'),
+                        style: GoogleFonts.inter(),
+                      )),
+
+                      DataCell(Text(
                         data['referenceNumber'] ?? 'N/A',
                         style: GoogleFonts.inter(),
                       )),
@@ -335,7 +341,9 @@ class _ReservationPageState extends State<ReservationPage> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text(
                   '${item['name']} x ${item['quantity']}',
-                  style: GoogleFonts.inter(),
+              style: GoogleFonts.inter().copyWith(
+              color: Colors.black,
+              ),
                 ),
               );
             }).toList(),

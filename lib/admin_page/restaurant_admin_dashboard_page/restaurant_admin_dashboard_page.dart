@@ -1,3 +1,4 @@
+import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/recent_activity_page/recent_activity_page.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reservation_history_page/reservation_history_page.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reservation_page/reservation_page.dart';
@@ -111,7 +112,7 @@ class _RestaurantAdminDashboardPageState
         // Navigate to login screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginAsScreen()),
+          MaterialPageRoute(builder: (context) => const AdminLoginPage()),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(

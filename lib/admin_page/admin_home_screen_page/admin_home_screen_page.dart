@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -96,7 +97,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
         await FirebaseAuth.instance.signOut(); // Sign out from Firebase Auth
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginAsScreen()), // Navigate to LoginAsScreen
+          MaterialPageRoute(builder: (context) => const AdminLoginPage()), // Navigate to LoginAsScreen
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,3 +1,4 @@
+import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -168,7 +169,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           await FirebaseAuth.instance.signOut();
           _showErrorSnackBar("No matching data found. Logging out.");
           print("No matching data for user: ${user.uid}. Logging out.");
-          _navigateTo(const LoginAsScreen());
+          _navigateTo(const AdminLoginPage());
         }
       } catch (e) {
         _showErrorSnackBar("Error fetching user data: $e");
@@ -176,7 +177,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
     } else {
       print("User is not logged in. Navigating to login page.");
-      _navigateTo(const LoginAsScreen());
+      _navigateTo(const AdminLoginPage());
     }
   }
 

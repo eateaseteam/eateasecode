@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../admin_home_screen_page/admin_home_screen_page.dart';
+import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
@@ -33,48 +34,72 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
 
-      // Check if the user is an admin in Firestore
+      // Get the user's UID
       String? userId = userCredential.user?.uid;
       if (userId == null) {
         throw Exception("Authentication succeeded, but user ID is null.");
       }
 
+      // Check if the user is an admin
       DocumentSnapshot adminDoc = await FirebaseFirestore.instance
           .collection('admins')
           .doc(userId)
           .get();
 
       if (adminDoc.exists) {
-        // Log the admin login
-        await _logAdminLogin(userId, email);
-
-        // Navigate to the Admin Dashboard
+        // Log admin login and navigate to Admin Dashboard
+        await _logActivity(userId, email, 'Admin');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const AdminHomeScreenPage()),
-              (route) => false, // Remove all previous routes
+              (route) => false,
         );
-      } else {
-        _showErrorSnackbar('You are not authorized to access this page.');
+        return;
       }
+
+      // Check if the user is a restaurant admin
+      DocumentSnapshot restaurantDoc = await FirebaseFirestore.instance
+          .collection('restaurants')
+          .doc(userId)
+          .get();
+
+      if (restaurantDoc.exists) {
+        // Log restaurant admin login and navigate to Restaurant Admin Dashboard
+        await _logActivity(userId, email, 'Restaurant Admin');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) =>
+                RestaurantAdminDashboardPage(userId: userId),
+          ),
+              (route) => false,
+        );
+        return;
+      }
+
+      // If the user doesn't belong to any role
+      _showErrorSnackbar('You are not authorized to access this page.');
     } catch (e) {
       _showErrorSnackbar('Login failed: ${e.toString()}');
     }
   }
 
-
-  Future<void> _logAdminLogin(String userId, String email) async {
+  Future<void> _logActivity(
+      String userId, String email, String role) async {
     try {
+      String collectionName =
+      role == 'Admin' ? 'admin_logs' : 'restaurant_logs';
       await FirebaseFirestore.instance
-          .collection('admin_logs')
+          .collection(collectionName)
           .add({
         'action': 'Login',
-        'details': 'Admin logged in',
+        'role': role,
         'timestamp': FieldValue.serverTimestamp(),
         'performedBy': email,
-        'adminId': userId,
+        'userId': userId,
+        'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a')
+            .format(DateTime.now()),
       });
     } catch (e) {
-      print('Error logging admin login: $e');
+      print('Error logging activity: $e');
     }
   }
 
@@ -106,7 +131,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               ),
               const SizedBox(height: 12.0),
               Text(
-                'Log in to effortlessly manage your restaurant\'s bookings and services.',
+                'Log in to manage operations.',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -203,5 +228,3 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     );
   }
 }
-
-
