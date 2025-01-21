@@ -5,7 +5,6 @@ import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reser
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../welcome_screen/log_in_as_screen.dart';
 import 'dashboard_page/dashboard_page.dart';
 import 'menu_page/menu_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 // Import admin screen
 import '../admin_home_screen_page/admin_home_screen_page.dart';
 import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
-import 'log_in_as_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

@@ -10,7 +10,6 @@ import '../admin_dashboard_screen/admin_dashboard_screen.dart';
 import '../customer_list_data/customer_list_data.dart';
 import '../list_or_add_restaurant_data/list_or_add_restaurant_data.dart';
 import '../recent_activity_screen/recent_activity_screen.dart';
-import '../welcome_screen/log_in_as_screen.dart';
 
 class AdminHomeScreenPage extends StatefulWidget {
   const AdminHomeScreenPage({super.key});

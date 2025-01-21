@@ -1,10 +1,10 @@
+import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-import '../welcome_screen/log_in_as_screen.dart';
 
 class AddEditRestaurantPage extends StatefulWidget {
   final String? restaurantId;
@@ -138,10 +138,9 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
 
             _showSnackBar('Restaurant saved successfully', Colors.green);
 
-            // Navigate to LoginAsScreen and remove all previous routes
             if (!mounted) return;
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const LoginAsScreen()),
+              MaterialPageRoute(builder: (context) => const AdminLoginPage()),
                   (Route<dynamic> route) => false,
             );
           } catch (authError) {
