@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
+import 'package:eatease_app_web/admin_page/login_screen/adminResto_login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -42,7 +42,6 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     });
   }
 
-
   Future<void> _fetchAdminEmail() async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
@@ -70,7 +69,8 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirm Logout', style: GoogleFonts.poppins()),
-          content: Text('Are you sure you want to log out?', style: GoogleFonts.poppins()),
+          content: Text('Are you sure you want to log out?',
+              style: GoogleFonts.poppins()),
           actions: [
             TextButton(
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
@@ -96,7 +96,9 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
         await FirebaseAuth.instance.signOut(); // Sign out from Firebase Auth
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AdminLoginPage()), // Navigate to LoginAsScreen
+          MaterialPageRoute(
+              builder: (context) =>
+                  const AdminLoginPage()), // Navigate to LoginAsScreen
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,9 +115,7 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       try {
-        await FirebaseFirestore.instance
-            .collection('admin_logs')
-            .add({
+        await FirebaseFirestore.instance.collection('admin_logs').add({
           'action': 'Logout',
           'details': 'Admin logged out',
           'timestamp': FieldValue.serverTimestamp(),
@@ -135,7 +135,8 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.blue[600]),
-        title: const Text('EatEase Admin', style: TextStyle(color: Colors.black)),
+        title:
+            const Text('EatEase Admin', style: TextStyle(color: Colors.black)),
         leading: IconButton(
           icon: Icon(isDrawerOpen ? Icons.menu_open : Icons.menu),
           onPressed: () {
@@ -156,7 +157,8 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                 ),
                 const SizedBox(width: 8.0),
                 Text(
-                  _adminEmail ?? 'Guest Admin', // Display the email or Guest Admin
+                  _adminEmail ?? 'Guest Admin',
+                  // Display the email or Guest Admin
                   style: GoogleFonts.inter(
                     color: Colors.grey[800],
                     fontSize: 16,
@@ -180,14 +182,19 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
                     decoration: const BoxDecoration(color: Colors.white),
                     child: Row(
                       children: [
-                        Image.asset('lib/assets/app_images/updated_official_logo.png', width: 150),
+                        Image.asset(
+                            'lib/assets/app_images/updated_official_logo.png',
+                            width: 150),
                       ],
                     ),
                   ),
-                  _buildListTile('Dashboard', Icons.dashboard, Colors.blue[600]!),
+                  _buildListTile(
+                      'Dashboard', Icons.dashboard, Colors.blue[600]!),
                   _buildListTile('Admin', Icons.person, Colors.blue[600]!),
-                  _buildListTile('Restaurant', Icons.restaurant, Colors.blue[600]!),
-                  _buildListTile('Recent Activity', Icons.history, Colors.blue[600]!),
+                  _buildListTile(
+                      'Restaurant', Icons.restaurant, Colors.blue[600]!),
+                  _buildListTile(
+                      'Recent Activity', Icons.history, Colors.blue[600]!),
                   // Log Out Tile with red icon
                   ListTile(
                     leading: const Icon(Icons.exit_to_app, color: Colors.red),
@@ -208,14 +215,15 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
             child: _currentPage == 'Dashboard'
                 ? AdminDashboardScreen()
                 : _currentPage == 'Admin'
-                ? const AdminPanel()
-                : _currentPage == 'Customer'
-                ? const CustomerListPage()
-                : _currentPage == 'Restaurant'
-                ? const RestaurantManagement()
-                : _currentPage == 'Recent Activity'
-                ? const RecentActivityScreen()
-                : Center(child: Text('Content for $_currentPage')),
+                    ? const AdminPanel()
+                    : _currentPage == 'Customer'
+                        ? const CustomerListPage()
+                        : _currentPage == 'Restaurant'
+                            ? const RestaurantManagement()
+                            : _currentPage == 'Recent Activity'
+                                ? const RecentActivityScreen()
+                                : Center(
+                                    child: Text('Content for $_currentPage')),
           ),
         ],
       ),
@@ -242,4 +250,3 @@ class _AdminHomeScreenPageState extends State<AdminHomeScreenPage> {
     );
   }
 }
-

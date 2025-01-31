@@ -21,10 +21,13 @@ class NotificationScreen extends StatelessWidget {
         .map((snapshot) => snapshot.docs);
   }
 
-  Widget _buildNotificationCard(BuildContext context, DocumentSnapshot document) {
+  Widget _buildNotificationCard(
+      BuildContext context, DocumentSnapshot document) {
     final data = document.data() as Map<String, dynamic>;
-    final restaurantName = data['restaurantName'] as String? ?? 'Unknown Restaurant';
-    final reservationDateTime = (data['reservationDateTime'] as Timestamp).toDate();
+    final restaurantName =
+        data['restaurantName'] as String? ?? 'Unknown Restaurant';
+    final reservationDateTime =
+        (data['reservationDateTime'] as Timestamp).toDate();
     final status = data['status'] as String? ?? 'pending';
     final totalPrice = data['totalPrice'] as double? ?? 0.0;
 
@@ -125,7 +128,8 @@ class NotificationScreen extends StatelessWidget {
     );
   }
 
-  void _showNotificationDetails(BuildContext context, DocumentSnapshot document) {
+  void _showNotificationDetails(
+      BuildContext context, DocumentSnapshot document) {
     final data = document.data() as Map<String, dynamic>;
     showModalBottomSheet(
       context: context,
@@ -154,12 +158,22 @@ class NotificationScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildDetailRow('Restaurant', data['restaurantName'] ?? 'Unknown'),
-                  _buildDetailRow('Date', DateFormat('MMMM d, y').format((data['reservationDateTime'] as Timestamp).toDate())),
-                  _buildDetailRow('Time', DateFormat('h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
-                  _buildDetailRow('Status', (data['status'] as String?)?.capitalize() ?? 'Unknown'),
-                  _buildDetailRow('Guests', (data['guestCount'] ?? 0).toString()),
-                  _buildDetailRow('Total Price', 'PHP ${(data['totalPrice'] as double?)?.toStringAsFixed(2) ?? '0.00'}'),
+                  _buildDetailRow(
+                      'Restaurant', data['restaurantName'] ?? 'Unknown'),
+                  _buildDetailRow(
+                      'Date',
+                      DateFormat('MMMM d, y').format(
+                          (data['reservationDateTime'] as Timestamp).toDate())),
+                  _buildDetailRow(
+                      'Time',
+                      DateFormat('h:mm a').format(
+                          (data['reservationDateTime'] as Timestamp).toDate())),
+                  _buildDetailRow('Status',
+                      (data['status'] as String?)?.capitalize() ?? 'Unknown'),
+                  _buildDetailRow(
+                      'Guests', (data['guestCount'] ?? 0).toString()),
+                  _buildDetailRow('Total Price',
+                      'PHP ${(data['totalPrice'] as double?)?.toStringAsFixed(2) ?? '0.00'}'),
                   const SizedBox(height: 16),
                   Text(
                     'Order Items',
@@ -283,4 +297,3 @@ extension StringExtension on String {
     return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
-

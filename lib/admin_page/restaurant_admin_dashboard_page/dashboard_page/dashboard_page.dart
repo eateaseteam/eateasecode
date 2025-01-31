@@ -93,7 +93,8 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSmallStatusCard(String title, String value, Color color, IconData icon) {
+  Widget _buildSmallStatusCard(
+      String title, String value, Color color, IconData icon) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -142,7 +143,6 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-
   Widget _buildOrdersByTypeChart(List<DocumentSnapshot> reservations) {
     Map<String, double> typeData = _getOrdersByType(reservations);
 
@@ -186,7 +186,8 @@ class DashboardPage extends StatelessWidget {
                       String type = typeData.keys.elementAt(group.x.toInt());
                       return BarTooltipItem(
                         '$type\n',
-                        GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+                        GoogleFonts.inter(
+                            color: Colors.white, fontWeight: FontWeight.bold),
                         children: <TextSpan>[
                           TextSpan(
                             text: rod.toY.round().toString(),
@@ -234,8 +235,10 @@ class DashboardPage extends StatelessWidget {
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: FlGridData(
                   show: true,
@@ -252,7 +255,8 @@ class DashboardPage extends StatelessWidget {
                 borderData: FlBorderData(show: false),
                 barGroups: List.generate(
                   typeData.length,
-                      (index) => _generateBarGroup(index, typeData.values.elementAt(index)),
+                  (index) => _generateBarGroup(
+                      index, typeData.values.elementAt(index)),
                 ),
               ),
             ),
@@ -312,4 +316,3 @@ class DashboardPage extends StatelessWidget {
     return typeData;
   }
 }
-

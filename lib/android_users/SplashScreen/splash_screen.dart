@@ -52,13 +52,16 @@ class _SplashState extends State<Splash> {
   Future<bool> _checkInternetAvailability() async {
     try {
       print('Attempting to check internet availability...');
-      final response = await http.get(Uri.parse('https://www.google.com')).timeout(const Duration(seconds: 5));
+      final response = await http
+          .get(Uri.parse('https://www.google.com'))
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         print('Internet is available.');
         return true;
       } else {
-        print('No internet access detected, status code: ${response.statusCode}');
+        print(
+            'No internet access detected, status code: ${response.statusCode}');
         return false;
       }
     } on TimeoutException catch (_) {
@@ -96,7 +99,9 @@ class _SplashState extends State<Splash> {
   void _navigateToHomeScreen(String email) {
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeScreenContainer(email: email)), // Pass the email to HomeScreenContainer
+        MaterialPageRoute(
+            builder: (context) => HomeScreenContainer(
+                email: email)), // Pass the email to HomeScreenContainer
       );
     });
   }

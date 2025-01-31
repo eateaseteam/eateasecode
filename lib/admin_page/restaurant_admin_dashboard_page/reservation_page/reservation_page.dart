@@ -310,7 +310,6 @@ class _ReservationPageState extends State<ReservationPage> {
                         (data['phone']?.toString() ?? 'N/A'),
                         style: GoogleFonts.inter(),
                       )),
-
                       DataCell(Text(
                         data['referenceNumber'] ?? 'N/A',
                         style: GoogleFonts.inter(),
@@ -341,9 +340,9 @@ class _ReservationPageState extends State<ReservationPage> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text(
                   '${item['name']} x ${item['quantity']}',
-              style: GoogleFonts.inter().copyWith(
-              color: Colors.black,
-              ),
+                  style: GoogleFonts.inter().copyWith(
+                    color: Colors.black,
+                  ),
                 ),
               );
             }).toList(),
@@ -453,7 +452,7 @@ class _ReservationPageState extends State<ReservationPage> {
           constraints: const BoxConstraints(maxWidth: 500),
           child: SingleChildScrollView(
             child: Column(
-                mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -475,8 +474,10 @@ class _ReservationPageState extends State<ReservationPage> {
                 const Divider(height: 32),
                 _buildDetailRow('Customer', data['userEmail'] ?? 'N/A'),
                 _buildDetailRow('Phone', (data['phone'] ?? 'N/A').toString()),
-                _buildDetailRow('Payment Method', data['paymentMethod'] ?? 'N/A'),
-                _buildDetailRow('Ref. Number', data['referenceNumber'] ?? 'N/A'),
+                _buildDetailRow(
+                    'Payment Method', data['paymentMethod'] ?? 'N/A'),
+                _buildDetailRow(
+                    'Ref. Number', data['referenceNumber'] ?? 'N/A'),
                 _buildDetailRow(
                     'Date/Time',
                     DateFormat('MM/dd/yy h:mm a').format(

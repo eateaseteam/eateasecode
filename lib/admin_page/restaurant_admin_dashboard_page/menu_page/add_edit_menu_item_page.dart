@@ -65,8 +65,7 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
 
     final metadata = SettableMetadata(
         contentType: 'image/jpeg',
-        customMetadata: {'picked-file-path': image.path}
-    );
+        customMetadata: {'picked-file-path': image.path});
 
     final UploadTask uploadTask = ref.putData(imageData, metadata);
     final TaskSnapshot taskSnapshot = await uploadTask;
@@ -182,13 +181,13 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
             children: [
               _imageBytes != null
                   ? Image.memory(
-                _imageBytes!,
-                fit: BoxFit.contain,
-              )
+                      _imageBytes!,
+                      fit: BoxFit.contain,
+                    )
                   : Image.network(
-                widget.item!['image'],
-                fit: BoxFit.contain,
-              ),
+                      widget.item!['image'],
+                      fit: BoxFit.contain,
+                    ),
               Positioned(
                 top: 10,
                 right: 10,
@@ -227,36 +226,38 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                   ),
                   child: _imageBytes != null
                       ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(
-                      _imageBytes!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.memory(
+                            _imageBytes!,
+                            fit: BoxFit.cover,
+                          ),
+                        )
                       : widget.item != null && widget.item!['image'] != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      widget.item!['image'],
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                      : Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 50,
-                      color: Colors.grey[400],
-                    ),
-                  ),
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                widget.item!['image'],
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Colors.grey[400],
+                              ),
+                            ),
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _pickImage,
-                icon: const Icon(Icons.add_a_photo, color: Colors.white), // Ensure the icon color is white
+                icon: const Icon(Icons.add_a_photo, color: Colors.white),
+                // Ensure the icon color is white
                 label: const Text(
                   'Select Image',
-                  style: TextStyle(color: Colors.white), // Set text color to white
+                  style:
+                      TextStyle(color: Colors.white), // Set text color to white
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
@@ -289,7 +290,8 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                   filled: true,
                   fillColor: Colors.grey[100],
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -332,20 +334,23 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
                 ),
                 child: _isUploading
                     ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    strokeWidth: 2,
-                  ),
-                )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2,
+                        ),
+                      )
                     : Text(
-                  widget.docId == null ? 'Add Menu Item' : 'Update Menu Item',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white, // Set text color to white
-                  ),
-                ),
+                        widget.docId == null
+                            ? 'Add Menu Item'
+                            : 'Update Menu Item',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white, // Set text color to white
+                        ),
+                      ),
               ),
             ],
           ),
@@ -362,4 +367,3 @@ class _AddEditMenuItemPageState extends State<AddEditMenuItemPage> {
     super.dispose();
   }
 }
-

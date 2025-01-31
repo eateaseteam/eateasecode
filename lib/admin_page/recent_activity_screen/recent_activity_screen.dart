@@ -139,15 +139,18 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
     });
   }
 
-  List<Map<String, dynamic>> _filterAndSortActivities(List<Map<String, dynamic>> activities) {
+  List<Map<String, dynamic>> _filterAndSortActivities(
+      List<Map<String, dynamic>> activities) {
     String currentUserId = _auth.currentUser?.uid ?? '';
     var filteredActivities = activities.where((activity) {
       var searchTerm = _searchController.text.toLowerCase();
-      return (activity['details']?.toString().toLowerCase() ?? '').contains(searchTerm) ||
-          (activity['performedBy']?.toString().toLowerCase() ?? '').contains(searchTerm) ||
-          (activity['action']?.toString().toLowerCase() ?? '').contains(searchTerm);
+      return (activity['details']?.toString().toLowerCase() ?? '')
+              .contains(searchTerm) ||
+          (activity['performedBy']?.toString().toLowerCase() ?? '')
+              .contains(searchTerm) ||
+          (activity['action']?.toString().toLowerCase() ?? '')
+              .contains(searchTerm);
     }).toList();
-
 
     if (_selectedLogType == 'Admin') {
       filteredActivities = filteredActivities.where((activity) {
@@ -247,14 +250,22 @@ class ActivityItem extends StatelessWidget {
   Widget _buildDetailsWidget(dynamic details) {
     if (details is Map<String, dynamic>) {
       // Define the order of fields for restaurant details
-      final orderOfFields = ['owner', 'name', 'email', 'address', 'phoneNumber', 'about'];
+      final orderOfFields = [
+        'owner',
+        'name',
+        'email',
+        'address',
+        'phoneNumber',
+        'about'
+      ];
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: orderOfFields.where((field) =>
-        details.containsKey(field) &&
-            !['logoUrl', 'disabled', 'uid'].contains(field)
-        ).map((field) {
+        children: orderOfFields
+            .where((field) =>
+                details.containsKey(field) &&
+                !['logoUrl', 'disabled', 'uid'].contains(field))
+            .map((field) {
           var value = details[field];
           // Special handling for createdAt
           if (field == 'createdAt' && value is Timestamp) {
@@ -304,4 +315,3 @@ class ActivityItem extends StatelessWidget {
     return DateFormat('MMM dd, yyyy h:mm a').format(timestamp.toDate());
   }
 }
-

@@ -20,9 +20,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     try {
       final currentUserId = _auth.currentUser?.uid;
       if (currentUserId != null) {
-        await FirebaseFirestore.instance
-            .collection('admin_logs')
-            .add({
+        await FirebaseFirestore.instance.collection('admin_logs').add({
           'action': action,
           'details': details,
           'timestamp': FieldValue.serverTimestamp(),
@@ -37,37 +35,48 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
 
   Future<void> _disableRestaurant(String uid) async {
     try {
-      DocumentSnapshot restaurantDoc = await _firestore.collection('restaurants').doc(uid).get();
+      DocumentSnapshot restaurantDoc =
+          await _firestore.collection('restaurants').doc(uid).get();
 
       if (restaurantDoc.exists) {
         String restaurantName = restaurantDoc['name'];
         String ownerName = restaurantDoc['owner'];
 
         // Update the 'disabled' field to true
-        await _firestore.collection('restaurants').doc(uid).update({'disabled': true});
+        await _firestore
+            .collection('restaurants')
+            .doc(uid)
+            .update({'disabled': true});
 
-        await _logActivity('Disable Restaurant', 'Disabled restaurant: $restaurantName (Owner: $ownerName)');
+        await _logActivity('Disable Restaurant',
+            'Disabled restaurant: $restaurantName (Owner: $ownerName)');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restaurant disabled successfully!'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Restaurant disabled successfully!'),
+              backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restaurant not found!'), backgroundColor: Colors.red),
+          const SnackBar(
+              content: Text('Restaurant not found!'),
+              backgroundColor: Colors.red),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to disable restaurant: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Failed to disable restaurant: $e'),
+            backgroundColor: Colors.red),
       );
     }
   }
 
-
   Future<void> _sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      await _logActivity('Password Reset', 'Sent password reset email to: $email');
+      await _logActivity(
+          'Password Reset', 'Sent password reset email to: $email');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password reset email sent!'),
@@ -91,7 +100,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         padding: const EdgeInsets.all(24.0),
         child: Card(
           elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -123,7 +133,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         ElevatedButton.icon(
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddEditRestaurantPage()),
+            MaterialPageRoute(
+                builder: (context) => const AddEditRestaurantPage()),
           ),
           icon: const Icon(Icons.add, color: Colors.white),
           label: Text(
@@ -261,8 +272,6 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-
-
   Widget _buildCompactDataTable(List<DocumentSnapshot> restaurants) {
     return ListView.builder(
       itemCount: restaurants.length,
@@ -273,8 +282,10 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           child: ExpansionTile(
             leading: _buildLogoCell(doc.id),
-            title: Text(doc['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-            subtitle: Text(doc['owner'], style: GoogleFonts.poppins(color: Colors.grey[600])),
+            title: Text(doc['name'],
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            subtitle: Text(doc['owner'],
+                style: GoogleFonts.poppins(color: Colors.grey[600])),
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -282,9 +293,13 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildInfoRow(Icons.email, 'Email', doc['email']),
-                    _buildInfoRow(Icons.phone, 'Phone', doc['phoneNumber'] ?? 'N/A'),
-                    _buildInfoRow(Icons.location_on, 'Address', doc['address'] ?? 'N/A'),
-                    _buildInfoRow(Icons.info_outline, 'About', doc['about'] ?? 'No description', maxLines: 3),
+                    _buildInfoRow(
+                        Icons.phone, 'Phone', doc['phoneNumber'] ?? 'N/A'),
+                    _buildInfoRow(
+                        Icons.location_on, 'Address', doc['address'] ?? 'N/A'),
+                    _buildInfoRow(Icons.info_outline, 'About',
+                        doc['about'] ?? 'No description',
+                        maxLines: 3),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -302,7 +317,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, {int maxLines = 1}) {
+  Widget _buildInfoRow(IconData icon, String label, String value,
+      {int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -314,7 +330,10 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.indigo[700])),
+                Text(label,
+                    style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.indigo[700])),
                 Text(
                   value,
                   style: GoogleFonts.poppins(color: Colors.grey[800]),
@@ -367,26 +386,28 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
           String? logoUrl = snapshot.data!['logoUrl'];
           return logoUrl != null && logoUrl.isNotEmpty
               ? Image.network(
-            logoUrl,
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              print('Error loading image: $error');
-              return const Icon(Icons.error, size: 40, color: Colors.red);
-            },
-            loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                      : null,
-                  strokeWidth: 2,
-                ),
-              );
-            },
-          )
+                  logoUrl,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading image: $error');
+                    return const Icon(Icons.error, size: 40, color: Colors.red);
+                  },
+                  loadingBuilder: (BuildContext context, Widget child,
+                      ImageChunkEvent? loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                        strokeWidth: 2,
+                      ),
+                    );
+                  },
+                )
               : const Icon(Icons.restaurant, size: 40);
         } else {
           return const Icon(Icons.restaurant, size: 40);
@@ -398,35 +419,47 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
   // Function to enable the restaurant
   Future<void> _enableRestaurant(String uid) async {
     try {
-      DocumentSnapshot restaurantDoc = await _firestore.collection('restaurants').doc(uid).get();
+      DocumentSnapshot restaurantDoc =
+          await _firestore.collection('restaurants').doc(uid).get();
 
       if (restaurantDoc.exists) {
         String restaurantName = restaurantDoc['name'];
         String ownerName = restaurantDoc['owner'];
 
         // Update the 'disabled' field to false
-        await _firestore.collection('restaurants').doc(uid).update({'disabled': false});
+        await _firestore
+            .collection('restaurants')
+            .doc(uid)
+            .update({'disabled': false});
 
-        await _logActivity('Enable Restaurant', 'Enabled restaurant: $restaurantName (Owner: $ownerName)');
+        await _logActivity('Enable Restaurant',
+            'Enabled restaurant: $restaurantName (Owner: $ownerName)');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restaurant enabled successfully!'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Restaurant enabled successfully!'),
+              backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restaurant not found!'), backgroundColor: Colors.red),
+          const SnackBar(
+              content: Text('Restaurant not found!'),
+              backgroundColor: Colors.red),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to enable restaurant: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Failed to enable restaurant: $e'),
+            backgroundColor: Colors.red),
       );
     }
   }
 
   // Updated action buttons with Enable/Disable Logic
   Widget _buildActionButtons(DocumentSnapshot doc) {
-    bool isDisabled = doc['disabled'] ?? false; // Read the 'disabled' status from Firestore
+    bool isDisabled =
+        doc['disabled'] ?? false; // Read the 'disabled' status from Firestore
 
     return Row(
       children: [
@@ -463,7 +496,6 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-
   void _showEnableConfirmationDialog(BuildContext context, String docId) {
     showDialog(
       context: context,
@@ -473,7 +505,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
             'Confirm Enable',
             style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
-          content: const Text('Are you sure you want to enable this restaurant?'),
+          content:
+              const Text('Are you sure you want to enable this restaurant?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -501,19 +534,19 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 
-
-
   void _showDisableConfirmationDialog(BuildContext context, String docId) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      barrierDismissible: false,
+      // Prevent dismissing the dialog by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
             'Confirm Disable',
             style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
-          content: const Text('Are you sure you want to disable this restaurant?'),
+          content:
+              const Text('Are you sure you want to disable this restaurant?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -529,7 +562,8 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
               ),
               child: Text(
                 'Disable',
@@ -553,4 +587,3 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
     );
   }
 }
-

@@ -13,9 +13,17 @@ class MenuPage extends StatefulWidget {
   _MenuPageState createState() => _MenuPageState();
 }
 
-class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin {
+class _MenuPageState extends State<MenuPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> types = ['All', 'Pork', 'Chicken', 'Seafood', 'Desserts', 'Beverages'];
+  final List<String> types = [
+    'All',
+    'Pork',
+    'Chicken',
+    'Seafood',
+    'Desserts',
+    'Beverages'
+  ];
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -46,7 +54,8 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        AuthCredential credential = EmailAuthProvider.credential(email: user.email!, password: password);
+        AuthCredential credential = EmailAuthProvider.credential(
+            email: user.email!, password: password);
         await user.reauthenticateWithCredential(credential);
         return true;
       }
@@ -57,7 +66,8 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     }
   }
 
-  void _navigateToAddEditMenuItemPage({String? docId, Map<String, dynamic>? item}) {
+  void _navigateToAddEditMenuItemPage(
+      {String? docId, Map<String, dynamic>? item}) {
     _showPasswordDialog().then((password) {
       if (password.isNotEmpty) {
         _verifyAdminPassword(password).then((isVerified) {
@@ -223,7 +233,8 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
           AspectRatio(
             aspectRatio: 1,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 item['image'],
                 fit: BoxFit.cover,
@@ -275,15 +286,19 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
-                        onPressed: () => _navigateToAddEditMenuItemPage(docId: docId, item: item),
+                        icon: const Icon(Icons.edit,
+                            color: Colors.blue, size: 20),
+                        onPressed: () => _navigateToAddEditMenuItemPage(
+                            docId: docId, item: item),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                        onPressed: () => _showDeleteConfirmationDialog(docId, item['name']),
+                        icon: const Icon(Icons.delete,
+                            color: Colors.red, size: 20),
+                        onPressed: () =>
+                            _showDeleteConfirmationDialog(docId, item['name']),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -302,7 +317,8 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Menu Item', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text('Delete Menu Item',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to delete this menu item?'),
         actions: [
           TextButton(
@@ -335,47 +351,53 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     bool obscurePassword = true;
 
     return await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Enter Admin Password', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            return TextField(
-              controller: passwordController,
-              obscureText: obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.grey,
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Enter Admin Password',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            content: StatefulBuilder(
+              builder: (context, setState) {
+                return TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      obscurePassword = !obscurePassword;
-                    });
-                  },
-                ),
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, ''),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, passwordController.text),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white, // Sets the text color to white
+                );
+              },
             ),
-            child: const Text('Verify'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, ''),
+                child:
+                    const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: () =>
+                    Navigator.pop(context, passwordController.text),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white, // Sets the text color to white
+                ),
+                child: const Text('Verify'),
+              ),
+            ],
           ),
-        ],
-      ),
-    ) ?? '';
+        ) ??
+        '';
   }
 
   @override
@@ -384,4 +406,3 @@ class _MenuPageState extends State<MenuPage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 }
-

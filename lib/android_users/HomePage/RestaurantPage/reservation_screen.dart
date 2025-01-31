@@ -12,7 +12,8 @@ class ReservationScreen extends StatefulWidget {
   _ReservationScreenState createState() => _ReservationScreenState();
 }
 
-class _ReservationScreenState extends State<ReservationScreen> with SingleTickerProviderStateMixin {
+class _ReservationScreenState extends State<ReservationScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -47,7 +48,9 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     final logoUrl = data['logoUrl'] ?? 'https://via.placeholder.com/80';
     final dateTime = (data['reservationDateTime'] as Timestamp).toDate();
     final status = data['status'] ?? 'pending';
-    final totalPrice = (data['totalPrice'] != null) ? (data['totalPrice'] as num).toDouble() : 0.0;
+    final totalPrice = (data['totalPrice'] != null)
+        ? (data['totalPrice'] as num).toDouble()
+        : 0.0;
     final phone = data['phone']?.toString() ?? 'Unknown';
     final reservationId = reservation.id;
     final restaurantId = reservation.reference.parent.parent!.id;
@@ -125,10 +128,12 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
               if (status == 'completed' || status == 'approved')
                 const Icon(Icons.check_circle, color: Colors.green, size: 28)
               else if (status == 'pending')
-                  IconButton(
-                    icon: const Icon(Icons.cancel_outlined, color: Colors.deepOrange, size: 28),
-                    onPressed: () => _showCancelDialog(context, restaurantId, reservationId),
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.cancel_outlined,
+                      color: Colors.deepOrange, size: 28),
+                  onPressed: () =>
+                      _showCancelDialog(context, restaurantId, reservationId),
+                ),
             ],
           ),
         ),
@@ -208,7 +213,8 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     );
   }
 
-  void _showCancelDialog(BuildContext context, String restaurantId, String reservationId) {
+  void _showCancelDialog(
+      BuildContext context, String restaurantId, String reservationId) {
     String? selectedReason;
     TextEditingController otherReasonController = TextEditingController();
 
@@ -218,7 +224,8 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
         return StatefulBuilder(
           builder: (context, setState) {
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
               child: Container(
                 padding: const EdgeInsets.all(24),
                 child: SingleChildScrollView(
@@ -255,7 +262,8 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                         ),
                         hint: const Text('Choose a reason'),
                         isExpanded: true,
@@ -306,11 +314,15 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                               );
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Reservation cancelled successfully.')),
+                                const SnackBar(
+                                    content: Text(
+                                        'Reservation cancelled successfully.')),
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error cancelling reservation: $e')),
+                                SnackBar(
+                                    content: Text(
+                                        'Error cancelling reservation: $e')),
                               );
                             }
                           },
@@ -347,7 +359,11 @@ class ReservationDetailsScreen extends StatelessWidget {
   final String reservationId;
   final String restaurantId;
 
-  const ReservationDetailsScreen({super.key, required this.reservationId, required this.restaurantId, required String phone});
+  const ReservationDetailsScreen(
+      {super.key,
+      required this.reservationId,
+      required this.restaurantId,
+      required String phone});
 
   @override
   Widget build(BuildContext context) {
@@ -377,12 +393,16 @@ class ReservationDetailsScreen extends StatelessWidget {
           final restaurantName = data['restaurantName'] ?? 'Unknown Restaurant';
           final dateTime = (data['reservationDateTime'] as Timestamp).toDate();
           final totalPrice = (data['totalPrice'] as num).toDouble();
-          final paymentmethod = data['paymentMethod'] ?? 'Unknown Payment Method';
-          final refnumber = data['referenceNumber'] ?? 'Unknown Reference Number';
+          final paymentmethod =
+              data['paymentMethod'] ?? 'Unknown Payment Method';
+          final refnumber =
+              data['referenceNumber'] ?? 'Unknown Reference Number';
           final status = data['status'] ?? 'pending';
           final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
-          final orderNotes = data['orderNotes'] as String? ?? 'No notes provided';
-          final cancellationReason = data['cancellationReason'] as String? ?? 'Not specified';
+          final orderNotes =
+              data['orderNotes'] as String? ?? 'No notes provided';
+          final cancellationReason =
+              data['cancellationReason'] as String? ?? 'Not specified';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -391,7 +411,8 @@ class ReservationDetailsScreen extends StatelessWidget {
               children: [
                 Text(
                   restaurantName,
-                  style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -408,7 +429,8 @@ class ReservationDetailsScreen extends StatelessWidget {
                 ),
                 Text(
                   'Status: ${status.toUpperCase()}',
-                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.poppins(
+                      fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 if (status == 'cancelled')
                   Text(
@@ -417,25 +439,33 @@ class ReservationDetailsScreen extends StatelessWidget {
                   ),
                 Text(
                   'Total: PHP ${totalPrice.toStringAsFixed(2)}',
-                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.deepOrange),
+                  style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.deepOrange),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Ordered Items:',
-                  style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 ...items.map((item) => ListTile(
-                  title: Text(item['name'], style: GoogleFonts.poppins(fontSize: 16)),
-                  subtitle: Text('Quantity: ${item['quantity']}', style: GoogleFonts.poppins(fontSize: 14)),
-                  trailing: Text(
-                    'PHP ${(item['price'] * item['quantity']).toStringAsFixed(2)}',
-                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                )),
+                      title: Text(item['name'],
+                          style: GoogleFonts.poppins(fontSize: 16)),
+                      subtitle: Text('Quantity: ${item['quantity']}',
+                          style: GoogleFonts.poppins(fontSize: 14)),
+                      trailing: Text(
+                        'PHP ${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    )),
                 const SizedBox(height: 16),
                 Text(
                   'Order Notes:',
-                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   orderNotes,

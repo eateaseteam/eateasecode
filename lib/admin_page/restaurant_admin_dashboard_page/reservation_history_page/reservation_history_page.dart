@@ -18,6 +18,7 @@ class ReservationHistoryPage extends StatefulWidget {
 class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
   final TextEditingController _searchController = TextEditingController();
   final RestaurantDataManager _dataManager = RestaurantDataManager();
+
   //final CollectionReference _logsCollection = FirebaseFirestore.instance.collection('reservation_history_logs');
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -118,50 +119,74 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+          return Center(
+              child: Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red)));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No reservations found.', style: TextStyle(color: Colors.grey[600])));
+          return Center(
+              child: Text('No reservations found.',
+                  style: TextStyle(color: Colors.grey[600])));
         }
 
         List<DocumentSnapshot> allReservations = snapshot.data!.docs;
-        List<DocumentSnapshot> filteredReservations = _filterReservations(allReservations);
+        List<DocumentSnapshot> filteredReservations =
+            _filterReservations(allReservations);
 
         return ListView(
           children: [
-            _buildHistorySection('This Month', _getReservationsForPeriod(filteredReservations, 0, 30)),
+            _buildHistorySection('This Month',
+                _getReservationsForPeriod(filteredReservations, 0, 30)),
             const SizedBox(height: 16),
-            _buildHistorySection('Last Month', _getReservationsForPeriod(filteredReservations, 30, 60)),
+            _buildHistorySection('Last Month',
+                _getReservationsForPeriod(filteredReservations, 30, 60)),
             const SizedBox(height: 16),
-            _buildHistorySection('Older', _getReservationsForPeriod(filteredReservations, 60, null)),
+            _buildHistorySection('Older',
+                _getReservationsForPeriod(filteredReservations, 60, null)),
           ],
         );
       },
     );
   }
 
-  List<DocumentSnapshot> _filterReservations(List<DocumentSnapshot> reservations) {
+  List<DocumentSnapshot> _filterReservations(
+      List<DocumentSnapshot> reservations) {
     String searchTerm = _searchController.text.toLowerCase();
     return reservations.where((reservation) {
       Map<String, dynamic> data = reservation.data() as Map<String, dynamic>;
-      Map<String, dynamic> reservationData = data['reservationData'] as Map<String, dynamic>;
-      return reservationData['userEmail'].toString().toLowerCase().contains(searchTerm) ||
-          reservationData['referenceNumber'].toString().toLowerCase().contains(searchTerm) ||
-          reservationData['status'].toString().toLowerCase().contains(searchTerm);
+      Map<String, dynamic> reservationData =
+          data['reservationData'] as Map<String, dynamic>;
+      return reservationData['userEmail']
+              .toString()
+              .toLowerCase()
+              .contains(searchTerm) ||
+          reservationData['referenceNumber']
+              .toString()
+              .toLowerCase()
+              .contains(searchTerm) ||
+          reservationData['status']
+              .toString()
+              .toLowerCase()
+              .contains(searchTerm);
     }).toList();
   }
 
-  List<DocumentSnapshot> _getReservationsForPeriod(List<DocumentSnapshot> reservations, int startDays, int? endDays) {
+  List<DocumentSnapshot> _getReservationsForPeriod(
+      List<DocumentSnapshot> reservations, int startDays, int? endDays) {
     DateTime now = DateTime.now();
     return reservations.where((reservation) {
-      DateTime reservationDate = (reservation['reservationData']['reservationDateTime'] as Timestamp).toDate();
+      DateTime reservationDate =
+          (reservation['reservationData']['reservationDateTime'] as Timestamp)
+              .toDate();
       int daysDifference = now.difference(reservationDate).inDays;
-      return daysDifference >= startDays && (endDays == null || daysDifference < endDays);
+      return daysDifference >= startDays &&
+          (endDays == null || daysDifference < endDays);
     }).toList();
   }
 
-  Widget _buildHistorySection(String title, List<DocumentSnapshot> reservations) {
+  Widget _buildHistorySection(
+      String title, List<DocumentSnapshot> reservations) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -191,14 +216,18 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                 DataColumn(label: Text('Status')),
               ],
               rows: reservations.map((reservation) {
-                Map<String, dynamic> data = reservation.data() as Map<String, dynamic>;
-                Map<String, dynamic> reservationData = data['reservationData'] as Map<String, dynamic>;
+                Map<String, dynamic> data =
+                    reservation.data() as Map<String, dynamic>;
+                Map<String, dynamic> reservationData =
+                    data['reservationData'] as Map<String, dynamic>;
                 return DataRow(
                   cells: [
                     DataCell(Text(reservation.id)), // Updated line
                     DataCell(Text(reservationData['userEmail'] ?? 'N/A')),
                     DataCell(Text(reservationData['guestCount'].toString())),
-                    DataCell(Text(DateFormat('MM/dd/yy h:mm a').format((reservationData['reservationDateTime'] as Timestamp).toDate()))),
+                    DataCell(Text(DateFormat('MM/dd/yy h:mm a').format(
+                        (reservationData['reservationDateTime'] as Timestamp)
+                            .toDate()))),
                     DataCell(_buildStatusBadge(reservationData['status'])),
                   ],
                 );
@@ -269,21 +298,27 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Reservation Details', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text('Reservation Details',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: FutureBuilder<DocumentSnapshot>(
-          future: _dataManager.getReservationDetails(widget.restaurantId, reservationId),
+          future: _dataManager.getReservationDetails(
+              widget.restaurantId, reservationId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator(color: _primaryColor));
+              return Center(
+                  child: CircularProgressIndicator(color: _primaryColor));
             }
             if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red));
+              return Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red));
             }
             if (!snapshot.hasData || !snapshot.data!.exists) {
-              return Text('Reservation not found', style: TextStyle(color: Colors.grey[600]));
+              return Text('Reservation not found',
+                  style: TextStyle(color: Colors.grey[600]));
             }
 
-            Map<String, dynamic> data = snapshot.data!.data() as Map<String, dynamic>;
+            Map<String, dynamic> data =
+                snapshot.data!.data() as Map<String, dynamic>;
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -291,30 +326,41 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                 children: [
                   _detailItem('Customer', data['userEmail']),
                   _detailItem('Guests', data['guestCount'].toString()),
-                  _detailItem('Date', DateFormat('MM/dd/yy h:mm a').format((data['reservationDateTime'] as Timestamp).toDate())),
+                  _detailItem(
+                      'Date',
+                      DateFormat('MM/dd/yy h:mm a').format(
+                          (data['reservationDateTime'] as Timestamp).toDate())),
                   _detailItem('Status', data['status']),
                   _detailItem('Total Price', 'PHP ${data['totalPrice']}'),
                   const SizedBox(height: 16),
-                  Text('Order Items', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                  ...(data['items'] as List<dynamic>).map((item) =>
-                      Padding(
+                  Text('Order Items',
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  ...(data['items'] as List<dynamic>).map((item) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(item['name'], style: GoogleFonts.poppins()),
-                            Text('x${item['quantity']}', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                            Text('x${item['quantity']}',
+                                style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500)),
                           ],
                         ),
-                      )
-                  ),
+                      )),
                   const SizedBox(height: 16),
-                  Text('Order Notes', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(data['orderNotes'] ?? 'No order notes', style: GoogleFonts.poppins()),
+                  Text('Order Notes',
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(data['orderNotes'] ?? 'No order notes',
+                      style: GoogleFonts.poppins()),
                   if (data['status'] == 'cancelled') ...[
                     const SizedBox(height: 16),
-                    Text('Cancellation Reason', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(data['cancellationReason'] ?? 'No reason provided', style: GoogleFonts.poppins()),
+                    Text('Cancellation Reason',
+                        style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(data['cancellationReason'] ?? 'No reason provided',
+                        style: GoogleFonts.poppins()),
                   ],
                 ],
               ),
@@ -349,8 +395,10 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Confirm Deletion', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete this reservation?', style: GoogleFonts.poppins()),
+        title: Text('Confirm Deletion',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this reservation?',
+            style: GoogleFonts.poppins()),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -383,9 +431,11 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
           .get();
 
       if (reservationDoc.exists) {
-        Map<String, dynamic> reservationData = reservationDoc.data() as Map<String, dynamic>;
+        Map<String, dynamic> reservationData =
+            reservationDoc.data() as Map<String, dynamic>;
 
-        String performedBy = FirebaseAuth.instance.currentUser?.email ?? 'Unknown';
+        String performedBy =
+            FirebaseAuth.instance.currentUser?.email ?? 'Unknown';
 
         // Delete the reservation history entry
         await FirebaseFirestore.instance
@@ -396,21 +446,22 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
             .delete();
 
         // Log the deletion
-        await _logActivity(
-            'Delete Reservation History Entry',
-            {
-              'ID': reservationId,
-              'Customer': reservationData['reservationData']['userEmail'],
-              'Guests': reservationData['reservationData']['guestCount'],
-              'Date/Time': DateFormat('MM/dd/yy h:mm a').format((reservationData['reservationData']['reservationDateTime'] as Timestamp).toDate()),
-              'Status': reservationData['reservationData']['status'],
-              'Performed By': performedBy
-            }
-        );
+        await _logActivity('Delete Reservation History Entry', {
+          'ID': reservationId,
+          'Customer': reservationData['reservationData']['userEmail'],
+          'Guests': reservationData['reservationData']['guestCount'],
+          'Date/Time': DateFormat('MM/dd/yy h:mm a').format(
+              (reservationData['reservationData']['reservationDateTime']
+                      as Timestamp)
+                  .toDate()),
+          'Status': reservationData['reservationData']['status'],
+          'Performed By': performedBy
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Reservation history entry deleted successfully by $performedBy'),
+            content: Text(
+                'Reservation history entry deleted successfully by $performedBy'),
             backgroundColor: Colors.green,
           ),
         );
@@ -427,5 +478,3 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     }
   }
 }
-
-

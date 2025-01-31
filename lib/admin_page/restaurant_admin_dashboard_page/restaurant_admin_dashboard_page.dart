@@ -1,4 +1,4 @@
-import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
+import 'package:eatease_app_web/admin_page/login_screen/adminResto_login_screen.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/recent_activity_page/recent_activity_page.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reservation_history_page/reservation_history_page.dart';
 import 'package:eatease_app_web/admin_page/restaurant_admin_dashboard_page/reservation_page/reservation_page.dart';
@@ -67,7 +67,8 @@ class _RestaurantAdminDashboardPageState
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirm Logout', style: GoogleFonts.poppins()),
-          content: Text('Are you sure you want to log out?', style: GoogleFonts.poppins()),
+          content: Text('Are you sure you want to log out?',
+              style: GoogleFonts.poppins()),
           actions: [
             TextButton(
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
@@ -102,7 +103,8 @@ class _RestaurantAdminDashboardPageState
           'email': email, // Record the email of the user who logged out
           'action': 'Logout',
           'timestamp': FieldValue.serverTimestamp(),
-          'formattedTimestamp': DateFormat('MMM d \'at\' h:mm a').format(DateTime.now()),
+          'formattedTimestamp':
+              DateFormat('MMM d \'at\' h:mm a').format(DateTime.now()),
         });
 
         // Sign out from Firebase Auth
@@ -154,15 +156,15 @@ class _RestaurantAdminDashboardPageState
                 _isLoading
                     ? const CircularProgressIndicator()
                     : Text(
-                  _restaurantName.isNotEmpty
-                      ? _restaurantName
-                      : 'Loading...',
-                  style: GoogleFonts.inter(
-                    color: Colors.grey[800],
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                        _restaurantName.isNotEmpty
+                            ? _restaurantName
+                            : 'Loading...',
+                        style: GoogleFonts.inter(
+                          color: Colors.grey[800],
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
               ],
             ),
           ),
@@ -183,11 +185,11 @@ class _RestaurantAdminDashboardPageState
                         _isLoading
                             ? const CircularProgressIndicator()
                             : _restaurantLogoUrl.isNotEmpty
-                            ? Image.network(_restaurantLogoUrl, width: 150)
-                            : Image.asset(
-                          'lib/assets/app_images/updated_official_logo.png',
-                          width: 150,
-                        ),
+                                ? Image.network(_restaurantLogoUrl, width: 150)
+                                : Image.asset(
+                                    'lib/assets/app_images/updated_official_logo.png',
+                                    width: 150,
+                                  ),
                       ],
                     ),
                   ),
@@ -196,7 +198,8 @@ class _RestaurantAdminDashboardPageState
                   _buildListTile('Menu', Icons.menu, color: Colors.orange),
                   _buildListTile('Reservation', Icons.calendar_today,
                       color: Colors.orange),
-                  _buildListTile('Reservation History', Icons.history, color: Colors.orange),
+                  _buildListTile('Reservation History', Icons.history,
+                      color: Colors.orange),
                   _buildListTile('Recent Activity', Icons.timeline,
                       color: Colors.orange),
                   _buildListTile('Logout', Icons.logout,
@@ -208,27 +211,32 @@ class _RestaurantAdminDashboardPageState
             child: _currentPage == 'Dashboard'
                 ? DashboardPage(restaurantId: widget.userId)
                 : _currentPage == 'Menu'
-                ? MenuPage(userId: widget.userId)
-                : _currentPage == 'Reservation'
-                ? ReservationPage(restaurantId: widget.userId)
-                : _currentPage == 'Reservation History'
-                ? ReservationHistoryPage(restaurantId: widget.userId)
-                : _currentPage == 'Recent Activity'
-                ? RecentActivityPage(restaurantId: widget.userId)
-                : Center(child: Text('Content for $_currentPage')),
+                    ? MenuPage(userId: widget.userId)
+                    : _currentPage == 'Reservation'
+                        ? ReservationPage(restaurantId: widget.userId)
+                        : _currentPage == 'Reservation History'
+                            ? ReservationHistoryPage(
+                                restaurantId: widget.userId)
+                            : _currentPage == 'Recent Activity'
+                                ? RecentActivityPage(
+                                    restaurantId: widget.userId)
+                                : Center(
+                                    child: Text('Content for $_currentPage')),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildListTile(String title, IconData? icon, {Color color = Colors.orange, Function()? onTap}) {
+  Widget _buildListTile(String title, IconData? icon,
+      {Color color = Colors.orange, Function()? onTap}) {
     return ListTile(
       leading: icon != null ? Icon(icon, color: color) : null,
       title: Text(title),
-      onTap: onTap ?? () {
-        setState(() => _currentPage = title);
-      },
+      onTap: onTap ??
+          () {
+            setState(() => _currentPage = title);
+          },
       splashColor: Colors.grey.withOpacity(0.3),
       hoverColor: Colors.grey.withOpacity(0.1),
     );

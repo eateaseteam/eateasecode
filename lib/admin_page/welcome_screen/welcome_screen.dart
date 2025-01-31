@@ -1,9 +1,10 @@
-import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
+import 'package:eatease_app_web/admin_page/login_screen/adminResto_login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 // Import admin screen
 import '../admin_home_screen_page/admin_home_screen_page.dart';
 import '../restaurant_admin_dashboard_page/restaurant_admin_dashboard_page.dart';
@@ -78,7 +79,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           fit: BoxFit.cover,
         ),
       ),
-    ).animate()
+    )
+        .animate()
         .scale(duration: 800.ms, curve: Curves.easeOutBack)
         .fadeIn(duration: 600.ms);
   }
@@ -104,7 +106,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ),
       ],
-    ).animate()
+    )
+        .animate()
         .fadeIn(duration: 800.ms, delay: 400.ms)
         .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
@@ -121,7 +124,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           height: 1.5,
         ),
       ),
-    ).animate()
+    )
+        .animate()
         .fadeIn(duration: 800.ms, delay: 800.ms)
         .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
@@ -154,14 +158,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         // If a restaurant is found
         if (restaurantDoc.exists) {
           var restaurantData = restaurantDoc.data() as Map<String, dynamic>;
-          String restaurantName = restaurantData['name'] ?? 'Restaurant Name'; // Safely fetch restaurant name
+          String restaurantName = restaurantData['name'] ??
+              'Restaurant Name'; // Safely fetch restaurant name
           _showWelcomeSnackBar(restaurantName);
-          _navigateTo(RestaurantAdminDashboardPage(userId: user.uid)); // Pass UID to Restaurant screen
+          _navigateTo(RestaurantAdminDashboardPage(
+              userId: user.uid)); // Pass UID to Restaurant screen
         }
         // If an admin is found
         else if (adminDoc.exists) {
           var adminData = adminDoc.data() as Map<String, dynamic>;
-          String fullName = adminData['full_name'] ?? 'Admin Name'; // Safely fetch admin name
+          String fullName =
+              adminData['full_name'] ?? 'Admin Name'; // Safely fetch admin name
           _showWelcomeSnackBar(fullName);
           _navigateTo(const AdminHomeScreenPage()); // Remove userId parameter
         } else {
@@ -179,7 +186,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       _navigateTo(const AdminLoginPage());
     }
   }
-
 
   void _navigateTo(Widget screen) {
     Navigator.pushReplacement(
@@ -228,4 +234,3 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 }
-

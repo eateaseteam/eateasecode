@@ -36,7 +36,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _forgotPassword(BuildContext context, String currentUserEmail) async {
+  Future<void> _forgotPassword(
+      BuildContext context, String currentUserEmail) async {
     return showDialog(
       context: context,
       builder: (context) {
@@ -87,7 +88,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Password reset email sent. Check your inbox.'),
+                      content:
+                          Text('Password reset email sent. Check your inbox.'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -117,7 +119,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-
 
   Future<void> _logout(BuildContext context) async {
     showDialog(
@@ -166,8 +167,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // Navigate to the SignInScreen
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => const SignInScreen()),
-                                (route) => false, // Remove all previous routes
+                            MaterialPageRoute(
+                                builder: (context) => const SignInScreen()),
+                            (route) => false, // Remove all previous routes
                           );
                         } catch (e) {
                           print('Logout failed: $e');
@@ -200,18 +202,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-
   Future<void> _updateProfileImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      String fileName = 'profile_images/${FirebaseAuth.instance.currentUser!.uid}.jpg';
+      String fileName =
+          'profile_images/${FirebaseAuth.instance.currentUser!.uid}.jpg';
       File imageFile = File(pickedFile.path);
       try {
         await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
-        String downloadUrl = await FirebaseStorage.instance.ref(fileName).getDownloadURL();
+        String downloadUrl =
+            await FirebaseStorage.instance.ref(fileName).getDownloadURL();
 
-        await FirebaseFirestore.instance.collection('users').doc(widget.email).update({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.email)
+            .update({
           'profileImageUrl': downloadUrl,
         });
 
@@ -219,10 +225,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           profileImageUrl = downloadUrl;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile picture updated successfully.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Profile picture updated successfully.')));
       } catch (e) {
         print('Error uploading image: $e');
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error updating profile picture.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error updating profile picture.')));
       }
     }
   }
@@ -248,9 +256,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               CircleAvatar(
                 radius: 100,
-                backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                backgroundImage: profileImageUrl != null &&
+                        profileImageUrl.isNotEmpty
                     ? NetworkImage(profileImageUrl)
-                    : const AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
+                    : const AssetImage(
+                            'lib/assets/app_images/updated_official_logo.png')
+                        as ImageProvider,
               ),
             ],
           ),
@@ -263,11 +274,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final String phoneString = _phoneController.text.trim();
-    final int phone = int.tryParse(phoneString) ?? 0; // Safely parse to int, fallback to 0 if invalid
+    final int phone = int.tryParse(phoneString) ??
+        0; // Safely parse to int, fallback to 0 if invalid
     final fullName = '$firstName $lastName'.trim();
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(widget.email).update({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.email)
+          .update({
         'firstName': firstName,
         'lastName': lastName,
         'fullName': fullName,
@@ -306,7 +321,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(_isEditing ? Icons.close : Icons.edit, color: Colors.black),
+            icon: Icon(_isEditing ? Icons.close : Icons.edit,
+                color: Colors.black),
             onPressed: () {
               setState(() {
                 _isEditing = !_isEditing;
@@ -321,7 +337,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(widget.email).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.email)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -361,7 +380,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
                       ),
                       child: Text(
                         'Save Changes',
@@ -389,7 +409,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const PrivacyPolicyScreen()),
                       );
                     },
                   ),
@@ -400,7 +421,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const FAQScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const FAQScreen()),
                       );
                     },
                   ),
@@ -411,7 +433,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AboutUsScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const AboutUsScreen()),
                       );
                     },
                   ),
@@ -432,7 +455,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
                       ),
                       child: Text(
                         'Logout',
@@ -477,7 +501,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
                 Image.asset(
-                  'lib/assets/app_images/gcash-logo.png', // Ensure this path is correct
+                  'lib/assets/app_images/gcash-logo.png',
+                  // Ensure this path is correct
                   height: 100,
                 ),
                 const SizedBox(height: 16),
@@ -514,7 +539,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader({required String fullName, required String email}) {
+  Widget _buildProfileHeader(
+      {required String fullName, required String email}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -537,9 +563,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () => _showProfileDialog(context, profileImageUrl),
                 child: CircleAvatar(
                   radius: 40,
-                  backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                  backgroundImage: profileImageUrl != null &&
+                          profileImageUrl!.isNotEmpty
                       ? NetworkImage(profileImageUrl!)
-                      : const AssetImage('lib/assets/app_images/updated_official_logo.png') as ImageProvider,
+                      : const AssetImage(
+                              'lib/assets/app_images/updated_official_logo.png')
+                          as ImageProvider,
                 ),
               ),
               Positioned(

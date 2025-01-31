@@ -1,4 +1,4 @@
-import 'package:eatease_app_web/admin_page/login_screen/admin_login_screen.dart';
+import 'package:eatease_app_web/admin_page/login_screen/adminResto_login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -10,7 +10,8 @@ class AddEditRestaurantPage extends StatefulWidget {
   final String? restaurantId;
   final Map<String, dynamic>? restaurantData;
 
-  const AddEditRestaurantPage({super.key, this.restaurantId, this.restaurantData});
+  const AddEditRestaurantPage(
+      {super.key, this.restaurantId, this.restaurantData});
 
   @override
   _AddEditRestaurantPageState createState() => _AddEditRestaurantPageState();
@@ -72,8 +73,7 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
 
     final metadata = SettableMetadata(
         contentType: 'image/jpeg',
-        customMetadata: {'picked-file-path': image.path}
-    );
+        customMetadata: {'picked-file-path': image.path});
 
     final UploadTask uploadTask = ref.putData(imageData, metadata);
     final TaskSnapshot taskSnapshot = await uploadTask;
@@ -102,16 +102,21 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
           'about': _aboutController.text,
           'disabled': false, // Initialize the disabled field
           if (imageUrl != null) 'logoUrl': imageUrl,
-          if (widget.restaurantId == null) 'createdAt': FieldValue.serverTimestamp(),
+          if (widget.restaurantId == null)
+            'createdAt': FieldValue.serverTimestamp(),
         };
 
         if (widget.restaurantId != null) {
           // Editing existing restaurant
           final updatedFields = _getUpdatedFields(restaurantData);
-          await _firestore.collection('restaurants').doc(widget.restaurantId).update(updatedFields);
+          await _firestore
+              .collection('restaurants')
+              .doc(widget.restaurantId)
+              .update(updatedFields);
 
           // Log activity with current admin's email
-          await _logActivity('Edit Restaurant', updatedFields, currentAdminEmail);
+          await _logActivity(
+              'Edit Restaurant', updatedFields, currentAdminEmail);
 
           _showSnackBar('Restaurant updated successfully', Colors.green);
           Navigator.pop(context);
@@ -120,7 +125,8 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
           try {
             // Create a temporary auth instance for the new restaurant
             FirebaseAuth tempAuth = FirebaseAuth.instance;
-            UserCredential userCredential = await tempAuth.createUserWithEmailAndPassword(
+            UserCredential userCredential =
+                await tempAuth.createUserWithEmailAndPassword(
               email: _emailController.text,
               password: _passwordController.text,
             );
@@ -128,10 +134,14 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
             restaurantData['uid'] = userCredential.user!.uid;
 
             // Add the restaurant data
-            await _firestore.collection('restaurants').doc(userCredential.user!.uid).set(restaurantData);
+            await _firestore
+                .collection('restaurants')
+                .doc(userCredential.user!.uid)
+                .set(restaurantData);
 
             // Log activity with stored admin email
-            await _logActivity('Add Restaurant', restaurantData, currentAdminEmail);
+            await _logActivity(
+                'Add Restaurant', restaurantData, currentAdminEmail);
 
             // Sign out the temporary user
             await tempAuth.signOut();
@@ -141,10 +151,12 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
             if (!mounted) return;
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const AdminLoginPage()),
-                  (Route<dynamic> route) => false,
+              (Route<dynamic> route) => false,
             );
           } catch (authError) {
-            _showSnackBar('Failed to create restaurant account: ${authError.toString()}', Colors.red);
+            _showSnackBar(
+                'Failed to create restaurant account: ${authError.toString()}',
+                Colors.red);
           }
         }
       } catch (e) {
@@ -158,18 +170,18 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
   Map<String, dynamic> _getUpdatedFields(Map<String, dynamic> newData) {
     final Map<String, dynamic> updatedFields = {};
     newData.forEach((key, value) {
-      if (widget.restaurantData == null || widget.restaurantData![key] != value) {
+      if (widget.restaurantData == null ||
+          widget.restaurantData![key] != value) {
         updatedFields[key] = value;
       }
     });
     return updatedFields;
   }
 
-  Future<void> _logActivity(String action, Map<String, dynamic> details, String? adminEmail) async {
+  Future<void> _logActivity(
+      String action, Map<String, dynamic> details, String? adminEmail) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('admin_logs')
-          .add({
+      await FirebaseFirestore.instance.collection('admin_logs').add({
         'action': action,
         'details': details,
         'timestamp': FieldValue.serverTimestamp(),
@@ -201,13 +213,13 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
             children: [
               _imageBytes != null
                   ? Image.memory(
-                _imageBytes!,
-                fit: BoxFit.contain,
-              )
+                      _imageBytes!,
+                      fit: BoxFit.contain,
+                    )
                   : Image.network(
-                _logoUrl,
-                fit: BoxFit.contain,
-              ),
+                      _logoUrl,
+                      fit: BoxFit.contain,
+                    ),
               Positioned(
                 top: 10,
                 right: 10,
@@ -251,27 +263,27 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
                     ),
                     child: _imageBytes != null
                         ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.memory(
-                        _imageBytes!,
-                        fit: BoxFit.cover,
-                      ),
-                    )
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              _imageBytes!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
                         : _logoUrl.isNotEmpty
-                        ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        _logoUrl,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                        : Center(
-                      child: Icon(
-                        Icons.restaurant,
-                        size: 50,
-                        color: Colors.grey[400],
-                      ),
-                    ),
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  _logoUrl,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Center(
+                                child: Icon(
+                                  Icons.restaurant,
+                                  size: 50,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -291,21 +303,26 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildTextField(_nameController, 'Restaurant Name', Icons.restaurant),
+                _buildTextField(
+                    _nameController, 'Restaurant Name', Icons.restaurant),
                 const SizedBox(height: 16),
                 _buildTextField(_ownerController, 'Owner Name', Icons.person),
                 const SizedBox(height: 16),
-                _buildTextField(_addressController, 'Address', Icons.location_on),
+                _buildTextField(
+                    _addressController, 'Address', Icons.location_on),
                 const SizedBox(height: 16),
-                _buildTextField(_emailController, 'Email', Icons.email, isEmail: true),
+                _buildTextField(_emailController, 'Email', Icons.email,
+                    isEmail: true),
                 const SizedBox(height: 16),
                 if (widget.restaurantId == null)
-                  _buildTextField(_passwordController, 'Password', Icons.lock, isPassword: true),
-                if (widget.restaurantId == null)
-                  const SizedBox(height: 16),
-                _buildTextField(_phoneNumberController, 'Phone Number', Icons.phone),
+                  _buildTextField(_passwordController, 'Password', Icons.lock,
+                      isPassword: true),
+                if (widget.restaurantId == null) const SizedBox(height: 16),
+                _buildTextField(
+                    _phoneNumberController, 'Phone Number', Icons.phone),
                 const SizedBox(height: 16),
-                _buildTextField(_aboutController, 'About', Icons.info_outline, isMultiline: true),
+                _buildTextField(_aboutController, 'About', Icons.info_outline,
+                    isMultiline: true),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isUploading ? null : _saveRestaurant,
@@ -318,20 +335,23 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
                   ),
                   child: _isUploading
                       ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 2,
-                    ),
-                  )
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            strokeWidth: 2,
+                          ),
+                        )
                       : Text(
-                    widget.restaurantId == null ? 'Add Restaurant' : 'Update Restaurant',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
+                          widget.restaurantId == null
+                              ? 'Add Restaurant'
+                              : 'Update Restaurant',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -342,13 +362,13 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
   }
 
   Widget _buildTextField(
-      TextEditingController controller,
-      String label,
-      IconData icon, {
-        bool isEmail = false,
-        bool isPassword = false,
-        bool isMultiline = false,
-      }) {
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool isEmail = false,
+    bool isPassword = false,
+    bool isMultiline = false,
+  }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword && _obscurePassword,
@@ -358,12 +378,13 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
         prefixIcon: Icon(icon, color: Colors.indigo[600]),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
-            color: Colors.indigo[600],
-          ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        )
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.indigo[600],
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              )
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -395,4 +416,3 @@ class _AddEditRestaurantPageState extends State<AddEditRestaurantPage> {
     super.dispose();
   }
 }
-

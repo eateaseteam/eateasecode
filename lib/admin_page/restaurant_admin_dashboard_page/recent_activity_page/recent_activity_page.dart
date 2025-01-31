@@ -69,7 +69,14 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
         const SizedBox(width: 16),
         DropdownButton<String>(
           value: _selectedLogType,
-          items: ['All', 'Menu', 'Reservation', 'Reservation History', 'Login', 'Logout'].map((String value) {
+          items: [
+            'All',
+            'Menu',
+            'Reservation',
+            'Reservation History',
+            'Login',
+            'Logout'
+          ].map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -100,7 +107,8 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
       stream: _getActivityStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.orange));
+          return const Center(
+              child: CircularProgressIndicator(color: Colors.orange));
         }
 
         if (snapshot.hasError) {
@@ -163,24 +171,33 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
       customerStream,
       loginStream,
       logoutStream,
-          (QuerySnapshot menuSnapshot, QuerySnapshot reservationSnapshot, QuerySnapshot customerSnapshot,
-          QuerySnapshot loginSnapshot, QuerySnapshot logoutSnapshot) {
+      (QuerySnapshot menuSnapshot,
+          QuerySnapshot reservationSnapshot,
+          QuerySnapshot customerSnapshot,
+          QuerySnapshot loginSnapshot,
+          QuerySnapshot logoutSnapshot) {
         List<Map<String, dynamic>> allActivities = [];
 
         if (_selectedLogType == 'All' || _selectedLogType == 'Menu') {
-          allActivities.addAll(menuSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+          allActivities.addAll(menuSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>));
         }
         if (_selectedLogType == 'All' || _selectedLogType == 'Reservation') {
-          allActivities.addAll(reservationSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+          allActivities.addAll(reservationSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>));
         }
-        if (_selectedLogType == 'All' || _selectedLogType == 'Reservation History') {
-          allActivities.addAll(customerSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+        if (_selectedLogType == 'All' ||
+            _selectedLogType == 'Reservation History') {
+          allActivities.addAll(customerSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>));
         }
         if (_selectedLogType == 'All' || _selectedLogType == 'Login') {
-          allActivities.addAll(loginSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+          allActivities.addAll(loginSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>));
         }
         if (_selectedLogType == 'All' || _selectedLogType == 'Logout') {
-          allActivities.addAll(logoutSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+          allActivities.addAll(logoutSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>));
         }
 
         return allActivities;
@@ -188,13 +205,16 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
     );
   }
 
-  List<Map<String, dynamic>> _filterAndSortActivities(List<Map<String, dynamic>> activities) {
+  List<Map<String, dynamic>> _filterAndSortActivities(
+      List<Map<String, dynamic>> activities) {
     var filteredActivities = activities.where((activity) {
       var searchTerm = _searchController.text.toLowerCase();
       String actionStr = activity['action']?.toString() ?? '';
       String detailsStr = _getDetailsString(activity);
       String performedByStr = activity['performedBy']?.toString() ?? '';
-      String emailStr = activity['email']?.toString() ?? activity['userEmail']?.toString() ?? '';
+      String emailStr = activity['email']?.toString() ??
+          activity['userEmail']?.toString() ??
+          '';
 
       return actionStr.toLowerCase().contains(searchTerm) ||
           detailsStr.toLowerCase().contains(searchTerm) ||
@@ -210,7 +230,9 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
       DateTime aDateTime = _parseTimestamp(aTimestamp);
       DateTime bDateTime = _parseTimestamp(bTimestamp);
 
-      return _isAscending ? aDateTime.compareTo(bDateTime) : bDateTime.compareTo(aDateTime);
+      return _isAscending
+          ? aDateTime.compareTo(bDateTime)
+          : bDateTime.compareTo(aDateTime);
     });
 
     return filteredActivities;
@@ -244,7 +266,8 @@ class _RecentActivityPageState extends State<RecentActivityPage> {
       if (details.containsKey('itemData')) {
         var itemData = details['itemData'] as Map;
         return '${itemData['name']} - ${itemData['price']} - ${itemData['description']}';
-      } else if (details.containsKey('oldData') && details.containsKey('newData')) {
+      } else if (details.containsKey('oldData') &&
+          details.containsKey('newData')) {
         var newData = details['newData'] as Map;
         return '${newData['name']} - ${newData['price']} - ${newData['description']}';
       }
@@ -378,13 +401,20 @@ class ActivityItem extends StatelessWidget {
     var details = activity['details'] as Map;
     var deletedData = details['deletedData'] as Map;
     return [
-      Text('Deleted Item Details:', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-      Text('Name: ${deletedData['name']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Price: PHP ${deletedData['price']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Description: ${deletedData['description']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Type: ${deletedData['type']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Item ID: ${details['itemId']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Performed by: ${activity['performedBy'] ?? 'Unknown'}', style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
+      Text('Deleted Item Details:',
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+      Text('Name: ${deletedData['name']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Price: PHP ${deletedData['price']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Description: ${deletedData['description']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Type: ${deletedData['type']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Item ID: ${details['itemId']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Performed by: ${activity['performedBy'] ?? 'Unknown'}',
+          style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
     ];
   }
 
@@ -393,13 +423,20 @@ class ActivityItem extends StatelessWidget {
     var oldData = details['oldData'] as Map;
     var newData = details['newData'] as Map;
     return [
-      Text('Edited Item Details:', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-      Text('Name: ${oldData['name']} → ${newData['name']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Price: PHP ${oldData['price']} → PHP ${newData['price']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Description: ${oldData['description']} → ${newData['description']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Type: ${oldData['type']} → ${newData['type']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Item ID: ${details['itemId']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Performed by: ${activity['performedBy'] ?? 'Unknown'}', style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
+      Text('Edited Item Details:',
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+      Text('Name: ${oldData['name']} → ${newData['name']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Price: PHP ${oldData['price']} → PHP ${newData['price']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Description: ${oldData['description']} → ${newData['description']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Type: ${oldData['type']} → ${newData['type']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Item ID: ${details['itemId']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Performed by: ${activity['performedBy'] ?? 'Unknown'}',
+          style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
     ];
   }
 
@@ -407,12 +444,16 @@ class ActivityItem extends StatelessWidget {
     var details = activity['details'] as Map;
     var itemData = details['itemData'] as Map;
     return [
-      Text('Added Item Details:', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+      Text('Added Item Details:',
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
       Text('Name: ${itemData['name']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Price: PHP ${itemData['price']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Description: ${itemData['description']}', style: GoogleFonts.inter(fontSize: 14)),
+      Text('Price: PHP ${itemData['price']}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('Description: ${itemData['description']}',
+          style: GoogleFonts.inter(fontSize: 14)),
       Text('Type: ${itemData['type']}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Performed by: ${activity['performedBy'] ?? 'Unknown'}', style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
+      Text('Performed by: ${activity['performedBy'] ?? 'Unknown'}',
+          style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
     ];
   }
 
@@ -423,7 +464,7 @@ class ActivityItem extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: Colors.black,  // Set text color to black
+          color: Colors.black, // Set text color to black
         ),
       ),
       const SizedBox(height: 8),
@@ -435,7 +476,8 @@ class ActivityItem extends StatelessWidget {
           style: GoogleFonts.inter(fontSize: 14)),
       Text('Guest Count: ${activity['guestCount'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
-      Text('Reservation Date & Time: ${_formatReservationDateTime(activity['reservationDateTime'])}',
+      Text(
+          'Reservation Date & Time: ${_formatReservationDateTime(activity['reservationDateTime'])}',
           style: GoogleFonts.inter(fontSize: 14)),
       Text('Payment Method: ${activity['paymentMethod'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
@@ -460,7 +502,7 @@ class ActivityItem extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: Colors.black,  // Set text color to black
+          color: Colors.black, // Set text color to black
         ),
       ),
       const SizedBox(height: 8),
@@ -472,7 +514,8 @@ class ActivityItem extends StatelessWidget {
           style: GoogleFonts.inter(fontSize: 14)),
       Text('Guest Count: ${activity['guestCount'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
-      Text('Reservation Date & Time: ${_formatReservationDateTime(activity['reservationDateTime'])}',
+      Text(
+          'Reservation Date & Time: ${_formatReservationDateTime(activity['reservationDateTime'])}',
           style: GoogleFonts.inter(fontSize: 14)),
       Text('Payment Method: ${activity['paymentMethod'] ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 14)),
@@ -533,13 +576,13 @@ class ActivityItem extends StatelessWidget {
     // Extract "Performed By" separately, if present
     final performedBy = details.containsKey('Performed By')
         ? Text(
-      'Performed By: ${details['Performed By']}',
-      style: GoogleFonts.inter(
-        fontSize: 14,
-        fontStyle: FontStyle.italic,
-        color: Colors.grey[700],
-      ),
-    )
+            'Performed By: ${details['Performed By']}',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              color: Colors.grey[700],
+            ),
+          )
         : null;
 
     return [
@@ -552,7 +595,9 @@ class ActivityItem extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 8),
-      ...details.entries.where((entry) => entry.key != 'Performed By').map((entry) {
+      ...details.entries
+          .where((entry) => entry.key != 'Performed By')
+          .map((entry) {
         return Text(
           '${entry.key}: ${entry.value}',
           style: GoogleFonts.inter(fontSize: 14),
@@ -562,12 +607,14 @@ class ActivityItem extends StatelessWidget {
     ];
   }
 
-
   List<Widget> _getLoginLogoutDetails() {
     return [
-      Text('Email: ${activity['email'] ?? activity['userEmail'] ?? 'Unknown'}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('User ID: ${activity['userId'] ?? 'Unknown'}', style: GoogleFonts.inter(fontSize: 14)),
-      Text('Performed by: ${activity['performedBy'] ?? activity['email'] ?? activity['userEmail'] ?? 'Unknown'}',
+      Text('Email: ${activity['email'] ?? activity['userEmail'] ?? 'Unknown'}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text('User ID: ${activity['userId'] ?? 'Unknown'}',
+          style: GoogleFonts.inter(fontSize: 14)),
+      Text(
+          'Performed by: ${activity['performedBy'] ?? activity['email'] ?? activity['userEmail'] ?? 'Unknown'}',
           style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
     ];
   }
@@ -582,11 +629,13 @@ class ActivityItem extends StatelessWidget {
       ];
     } else if (activity['details'] is Map) {
       return (activity['details'] as Map).entries.map((entry) {
-        return Text('${entry.key}: ${entry.value}', style: GoogleFonts.inter(fontSize: 14));
+        return Text('${entry.key}: ${entry.value}',
+            style: GoogleFonts.inter(fontSize: 14));
       }).toList();
     }
     return [
-      Text('No additional details available.', style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
+      Text('No additional details available.',
+          style: GoogleFonts.inter(fontSize: 14, fontStyle: FontStyle.italic)),
     ];
   }
 }

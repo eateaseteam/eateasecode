@@ -152,9 +152,12 @@ class AdminDashboardScreen extends StatelessWidget {
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
           barGroups: [
-            _buildBarChartGroupData(0, data['totalCustomers'].toDouble(), Colors.blue),
-            _buildBarChartGroupData(1, data['activeRestaurants'].toDouble(), Colors.green),
-            _buildBarChartGroupData(2, data['totalAdmins'].toDouble(), Colors.orange),
+            _buildBarChartGroupData(
+                0, data['totalCustomers'].toDouble(), Colors.blue),
+            _buildBarChartGroupData(
+                1, data['activeRestaurants'].toDouble(), Colors.green),
+            _buildBarChartGroupData(
+                2, data['totalAdmins'].toDouble(), Colors.orange),
           ],
           titlesData: FlTitlesData(
             leftTitles: AxisTitles(
@@ -178,7 +181,6 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
             ),
           ),
-
           borderData: FlBorderData(show: false),
           barTouchData: BarTouchData(enabled: true),
         ),
@@ -200,7 +202,8 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  Stream<Map<String, dynamic>> _calculateOverviewDataStream(List<DocumentSnapshot> restaurants) async* {
+  Stream<Map<String, dynamic>> _calculateOverviewDataStream(
+      List<DocumentSnapshot> restaurants) async* {
     while (true) {
       int totalCustomers = 0;
       int activeRestaurants = 0;
@@ -209,18 +212,18 @@ class AdminDashboardScreen extends StatelessWidget {
       try {
         // Fetch total customers
         QuerySnapshot customersSnapshot =
-        await FirebaseFirestore.instance.collection('users').get();
+            await FirebaseFirestore.instance.collection('users').get();
         totalCustomers = customersSnapshot.docs.length;
 
         // Fetch total admins
         QuerySnapshot adminsSnapshot =
-        await FirebaseFirestore.instance.collection('admins').get();
+            await FirebaseFirestore.instance.collection('admins').get();
         totalAdmins = adminsSnapshot.docs.length;
 
         // Count active restaurants based on reservations
         for (var restaurant in restaurants) {
           List<Map<String, dynamic>> reservations =
-          await _dataManager.getReservationsForRestaurant(restaurant.id);
+              await _dataManager.getReservationsForRestaurant(restaurant.id);
 
           if (reservations.isNotEmpty) {
             activeRestaurants++;

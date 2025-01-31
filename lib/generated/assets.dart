@@ -21,8 +21,7 @@ class Assets {
   static const String libMain = 'lib/main.dart';
   static const String listOrAddRestaurantDataAddEditRestaurantPage = 'lib/admin_page/list_or_add_restaurant_data/add-edit-restaurant-page.dart';
   static const String listOrAddRestaurantDataListOrAddRestaurantData = 'lib/admin_page/list_or_add_restaurant_data/list_or_add_restaurant_data.dart';
-  static const String loginScreenAdminLoginScreen = 'lib/admin_page/login_screen/admin_login_screen.dart';
-  static const String loginScreenRestaurantAdminLogInScreen = 'lib/admin_page/login_screen/restaurant_admin_log_in_screen.dart';
+  static const String loginScreenAdminRestoLoginScreen = 'lib/admin_page/login_screen/adminResto_login_screen.dart';
   static const String menuPageAddEditMenuItemPage = 'lib/admin_page/restaurant_admin_dashboard_page/menu_page/add_edit_menu_item_page.dart';
   static const String menuPageMenuPage = 'lib/admin_page/restaurant_admin_dashboard_page/menu_page/menu_page.dart';
   static const String notificationHandlerNotificationHandler = 'lib/Notification_Handler/notification_handler.dart';

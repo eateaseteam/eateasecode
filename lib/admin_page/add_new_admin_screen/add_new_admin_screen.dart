@@ -243,7 +243,7 @@ class _AdminPanelState extends State<AdminPanel> {
       builder: (context) {
         return AlertDialog(
           shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: Text('Delete Admin?', style: _dialogTitleStyle),
           content: Text('Are you sure you want to delete this admin?',
               style: _dialogContentStyle),
