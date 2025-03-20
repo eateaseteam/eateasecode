@@ -1,1 +1,37 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"agosbuhay-db","appId":"1:804961042835:android:d74c3b4038bae03200a866","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"agosbuhay-db","configurations":{"android":"1:804961042835:android:d74c3b4038bae03200a866","web":"1:804961042835:web:5b4bf7e7e1a4dd9e00a866","windows":"1:804961042835:web:20f5de29aec4def300a866"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "agosbuhay-db",
+          "appId": "1:804961042835:android:d74c3b4038bae03200a866",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "agosbuhay-db",
+          "configurations": {
+            "android": "1:804961042835:android:d74c3b4038bae03200a866",
+            "web": "1:804961042835:web:5b4bf7e7e1a4dd9e00a866",
+            "windows": "1:804961042835:web:20f5de29aec4def300a866"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
