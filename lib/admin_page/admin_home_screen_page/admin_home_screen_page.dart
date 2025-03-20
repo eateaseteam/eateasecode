@@ -3,7 +3,7 @@ import 'package:eatease_app_web/admin_page/login_screen/adminResto_login_screen.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart'; // For date formatting
+// For date formatting
 
 import '../add_new_admin_screen/add_new_admin_screen.dart';
 import '../admin_dashboard_screen/admin_dashboard_screen.dart';

@@ -17,7 +17,6 @@ class Assets {
   static const String foodImagesSampleFood = 'lib/assets/food_images/sample_food.png';
   static const String generatedAssets = 'lib/generated/assets.dart';
   static const String homePageHomeScreenContainer = 'lib/android_users/HomePage/home_screen_container.dart';
-  static const String libFirebaseOptions = 'lib/firebase_options.dart';
   static const String libMain = 'lib/main.dart';
   static const String listOrAddRestaurantDataAddEditRestaurantPage = 'lib/admin_page/list_or_add_restaurant_data/add-edit-restaurant-page.dart';
   static const String listOrAddRestaurantDataListOrAddRestaurantData = 'lib/admin_page/list_or_add_restaurant_data/list_or_add_restaurant_data.dart';

@@ -406,7 +406,7 @@ class _AdminPanelState extends State<AdminPanel> {
                         scrollDirection: Axis.vertical,
                         child: DataTable(
                           headingRowColor:
-                              MaterialStateProperty.all(Colors.indigo[100]),
+                              WidgetStateProperty.all(Colors.indigo[100]),
                           headingTextStyle: GoogleFonts.poppins(
                               color: Colors.indigo[900],
                               fontWeight: FontWeight.w600),

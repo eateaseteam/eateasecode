@@ -51,7 +51,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         await _logActivity(userId, email, 'Admin');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const AdminHomeScreenPage()),
-          (route) => false,
+              (route) => false,
         );
         return;
       }
@@ -69,7 +69,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           MaterialPageRoute(
             builder: (context) => RestaurantAdminDashboardPage(userId: userId),
           ),
-          (route) => false,
+              (route) => false,
         );
         return;
       }
@@ -84,7 +84,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   Future<void> _logActivity(String userId, String email, String role) async {
     try {
       String collectionName =
-          role == 'Admin' ? 'admin_logs' : 'restaurant_logs';
+      role == 'Admin' ? 'admin_logs' : 'restaurant_logs';
       await FirebaseFirestore.instance.collection(collectionName).add({
         'action': 'Login',
         'role': role,
@@ -92,7 +92,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         'performedBy': email,
         'userId': userId,
         'formattedTimestamp':
-            DateFormat('MMM d \'at\' h:mm a').format(DateTime.now()),
+        DateFormat('MMM d \'at\' h:mm a').format(DateTime.now()),
       });
     } catch (e) {
       print('Error logging activity: $e');
@@ -222,7 +222,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         prefixIcon: Icon(prefixIcon, color: Colors.grey[600]),
         suffixIcon: suffixIcon,
         contentPadding:
-            const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+        const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
       ),
     );
   }

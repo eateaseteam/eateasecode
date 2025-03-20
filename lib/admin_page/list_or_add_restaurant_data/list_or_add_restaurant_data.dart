@@ -220,7 +220,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       child: DataTable(
         columnSpacing: 20,
         horizontalMargin: 12,
-        headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
+        headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
         headingTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[900],
           fontWeight: FontWeight.w600,
@@ -249,7 +249,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
       child: DataTable(
         columnSpacing: 20,
         horizontalMargin: 12,
-        headingRowColor: MaterialStateProperty.all(Colors.indigo[100]),
+        headingRowColor: WidgetStateProperty.all(Colors.indigo[100]),
         headingTextStyle: GoogleFonts.poppins(
           color: Colors.indigo[900],
           fontWeight: FontWeight.w600,
@@ -358,7 +358,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
         DataCell(_buildEllipsisText(doc['phoneNumber'], 100)),
         DataCell(_buildEllipsisText(doc['address'], 150)),
         DataCell(
-          Container(
+          SizedBox(
             width: 150,
             child: Text(
               doc['about'] ?? 'No description',
@@ -577,7 +577,7 @@ class _RestaurantManagementState extends State<RestaurantManagement> {
   }
 
   Widget _buildEllipsisText(String text, double width) {
-    return Container(
+    return SizedBox(
       width: width,
       child: Text(
         text,

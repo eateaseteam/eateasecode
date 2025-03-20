@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final updatedDisabledIds = <String>{};
 
       for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         if (data['disabled'] == true) {
           updatedDisabledIds.add(doc.id);
         }
