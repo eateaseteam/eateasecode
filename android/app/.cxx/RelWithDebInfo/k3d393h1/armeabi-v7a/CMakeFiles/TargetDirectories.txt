@@ -1,0 +1,2 @@
+C:/Users/Rodri/AndroidStudioProjects/EateaseRevision/android/app/.cxx/RelWithDebInfo/k3d393h1/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Rodri/AndroidStudioProjects/EateaseRevision/android/app/.cxx/RelWithDebInfo/k3d393h1/armeabi-v7a/CMakeFiles/rebuild_cache.dir

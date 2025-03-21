@@ -1,0 +1,2 @@
+C:/Users/Rodri/AndroidStudioProjects/EateaseRevision/android/app/.cxx/Debug/4g1pa6a5/x86/CMakeFiles/edit_cache.dir
+C:/Users/Rodri/AndroidStudioProjects/EateaseRevision/android/app/.cxx/Debug/4g1pa6a5/x86/CMakeFiles/rebuild_cache.dir
